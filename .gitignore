@@ -1,0 +1,29 @@
+# sistema operacional — arquivos gerados automaticamente
+# nunca pertencem ao repositório — são lixo de ambiente local
+.DS_Store
+Thumbs.db
+
+# editor — configurações pessoais de cada dev
+# cada dev tem suas próprias preferências de tema e extensões
+.vscode/
+
+# dependências Node.js — 300MB que o npm reinstala em segundos
+# o package.json é a fonte da verdade — não os node_modules
+node_modules/
+
+# variáveis de ambiente — credenciais reais NUNCA sobem pro GitHub
+# o .env.example documenta quais variáveis existem sem expor os valores
+.env
+.env.local
+.env.production
+
+# logs gerados em runtime — crescem infinitamente, não são código
+*.log
+logs/
+
+# cache gerado automaticamente
+.cache/
+
+# arquivos de build gerados — não são código fonte
+dist/
+build/
