@@ -1,0 +1,54 @@
+# docker-compose.override.yml
+# ─────────────────────────────────────────────────────────────
+# DEV — aplicado automaticamente no desenvolvimento local
+# o Docker Compose lê esse arquivo junto com o base sem precisar especificar
+# docker compose up --build -d (terminal) já aplica base + override automaticamente
+# contém tudo que é exclusivo do ambiente de desenvolvimento
+# ─────────────────────────────────────────────────────────────
+
+services:
+
+  app_posts:
+
+    # sobrepõe o build da base adicionando BuildKit
+    # BuildKit é o motor de build avançado do Docker
+    # habilita o cache mount do Dockerfile (Dockerfile)
+    # sem BuildKit o --mount=type=cache no RUN npm install é ignorado
+    # BUILDKIT_INLINE_CACHE=1 guarda o cache inline na imagem gerada
+    # isso permite que o próximo build reutilize layers com precisão
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BUILDKIT_INLINE_CACHE: "1"  # ativa cache inline no dev (docker-compose.yml)
+
+    # porta exposta pro localhost do notebook
+    # em desenvolvimento você acessa localhost:3000 diretamente no navegador
+    # em produção o Nginx roteia internamente — sem expor pra internet
+    ports:
+      - "3000:3000"
+
+    # variáveis exclusivas do desenvolvimento
+    # NODE_ENV=development ativa logs detalhados no Express
+    # erros completos aparecem no terminal — essencial pra debug
+    environment:
+      NODE_ENV: development   # modo desenvolvimento — logs verbosos
+      PORT: 3000              # porta interna do servidor Express
+
+    # volumes de hot reload — exclusivos do desenvolvimento
+    # .:/app monta o código do notebook dentro do container
+    # você salva um arquivo → nodemon detecta → servidor reinicia automaticamente
+    # em produção nunca se monta código do disco no container
+    # a imagem carrega o código via COPY . . (Dockerfile) — imutável e autossuficiente
+    volumes:
+      - .:/app                # hot reload — código do notebook no container
+      - /app/node_modules     # protege o node_modules compilado pro Linux Alpine
+                              # sem esse volume anônimo o Windows sobrescreveria
+                              # o node_modules do Linux com binários incompatíveis
+                              # bcrypt e outros módulos nativos quebrariam
+
+    # sobrescreve o CMD do Dockerfile (Dockerfile) em desenvolvimento
+    # executa migrations e depois sobe com nodemon em vez de node
+    # nodemon detecta mudanças no código e reinicia automaticamente
+    # em produção o CMD do Dockerfile usa node — sem nodemon
+    command: sh -c "node src/scripts/migrate.js && npx nodemon server.js"

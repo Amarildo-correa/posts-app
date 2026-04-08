@@ -1,0 +1,98 @@
+# docker-compose.yml
+# ─────────────────────────────────────────────────────────────
+# BASE — configuração comum a todos os ambientes
+# não contém nada exclusivo de dev ou produção
+# é o contrato mínimo que qualquer ambiente precisa respeitar
+# o Reddit chama esse padrão de "environment-agnostic config"
+# ─────────────────────────────────────────────────────────────
+
+services:
+
+  # ── SERVIÇO NODE.JS ───────────────────────────────────────
+  app_posts:
+
+    # instrui o Compose a buildar usando o Dockerfile (Dockerfile)
+    # context: . define a raiz do projeto como contexto do build
+    # dockerfile: aponta explicitamente pro arquivo de receita
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    # nome fixo do container — fácil identificar no docker ps (terminal)
+    container_name: app_posts
+
+    # reinicia automaticamente em qualquer falha de processo ou servidor
+    # unless-stopped: não reinicia se você parou com docker compose down (terminal)
+    # é o padrão de resiliência que o Instagram usa em todos os serviços críticos
+    restart: unless-stopped
+
+    # variáveis comuns a todos os ambientes
+    # DB_HOST aponta pro hostname interno Docker — igual em dev e produção
+    # o Node.js resolve "mysql_posts" pela rede interna Docker automaticamente
+    environment:
+      DB_HOST: ${DB_HOST}              # hostname interno — nunca IP hardcoded
+      DB_PORT: ${DB_PORT}               # porta interna do MySQL
+      DB_NAME: ${DB_NAME}               # nome do banco de dados
+      DB_USER: ${DB_USER}               # usuário do banco
+      DB_PASSWORD: ${DB_PASSWORD}       # senha do banco — vem do .env
+      SESSION_SECRET: ${SESSION_SECRET} # chave de assinatura das sessões
+
+    # garante que o MySQL está saudável antes do Node.js tentar conectar
+    # condition: service_healthy espera o healthcheck do MySQL passar
+    # sem isso o Node.js sobe antes do banco estar pronto e trava
+    # o Facebook chama esse padrão de "readiness gate"
+    depends_on:
+      mysql_posts:
+        condition: service_healthy
+
+  # ── SERVIÇO MYSQL ─────────────────────────────────────────
+  mysql_posts:
+
+    # imagem oficial do MySQL 8.0 do Docker Hub
+    # versão fixada — NUNCA usar "latest" em produção
+    # "latest" pode mudar silenciosamente e quebrar o banco
+    # é o mesmo padrão que o Reddit usa — versão explícita sempre
+    image: mysql:8.0
+
+    container_name: mysql_posts
+
+    restart: unless-stopped
+
+    # variáveis que o MySQL lê na primeira inicialização
+    # cria o banco e o usuário automaticamente — zero SQL manual
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD} # senha do root — nunca exposta
+      MYSQL_DATABASE: ${DB_NAME}               # cria o banco automaticamente
+      MYSQL_USER: ${DB_USER}                   # cria o usuário automaticamente
+      MYSQL_PASSWORD: ${DB_PASSWORD}           # senha do usuário
+
+    # expose — porta acessível APENAS dentro da rede Docker interna
+    # NUNCA use ports: no MySQL — jamais expõe o banco pra internet
+    # o Node.js acessa via hostname mysql_posts — zero exposição externa
+    expose:
+      - "3306"
+
+    # volume persistente — dados do MySQL sobrevivem ao restart do container
+    # sem esse volume todos os registros somem quando o container para
+    # é o equivalente ao disco rígido do banco — separado do ciclo do container
+    volumes:
+      - mysql_posts_data:/var/lib/mysql
+
+    # healthcheck — verifica se o MySQL está realmente pronto pra conexões
+    # mysqladmin ping testa a conectividade real do banco
+    # interval: verifica a cada 5 segundos
+    # timeout: espera até 10 segundos por tentativa
+    # retries: tenta 10 vezes antes de declarar falha
+    # o depends_on do Node.js espera esse check passar antes de subir
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+
+# ── VOLUMES PERSISTENTES ──────────────────────────────────
+# declarados aqui para que o Docker gerencie o ciclo de vida completo
+# sobrevivem ao docker compose down (terminal)
+# só removidos com docker compose down -v (terminal) — ação destrutiva explícita
+volumes:
+  mysql_posts_data:

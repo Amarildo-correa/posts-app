@@ -1,0 +1,46 @@
+# docker-compose.prod.yml
+# ─────────────────────────────────────────────────────────────
+# PRODUÇÃO — aplicado manualmente no Vultr com -f
+# nunca aplicado automaticamente — requer intenção explícita do engenheiro
+# comando de deploy:
+# docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d (terminal)
+# contém tudo que é exclusivo do ambiente de produção
+# ─────────────────────────────────────────────────────────────
+
+services:
+
+  app_posts:
+
+    # sobrepõe o build da base adicionando BuildKit pra produção
+    # BUILDKIT_INLINE_CACHE=1 em produção acelera deploys no Vultr
+    # quando package.json muda, npm encontra o cache anterior
+    # instala só as dependências novas — não baixa tudo do zero
+    # deploy típico com cache: ~5 segundos em vez de ~40 segundos
+    # é o mesmo princípio que o Facebook usa no Buck internamente
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BUILDKIT_INLINE_CACHE: "1"  # ativa cache inline na produção (docker-compose.yml)
+
+    # porta interna que o Nginx vai rotear no Vultr
+    # o usuário acessa comentaae.com → Nginx recebe na 443
+    # Nginx roteia internamente pra app_posts:3000
+    # a porta 3000 nunca é acessada diretamente pelo usuário
+    ports:
+      - "3000:3000"
+
+    # variáveis exclusivas de produção
+    # NODE_ENV=production desativa logs verbosos — performance crítica
+    # logs detalhados em produção consomem I/O e reduzem throughput
+    # o Instagram desativa logs de debug em produção por esse motivo
+    environment:
+      NODE_ENV: production    # modo produção — logs mínimos, performance máxima
+      PORT: 3000              # porta interna do servidor Express
+
+    # SEM volumes de código fonte em produção — princípio de imutabilidade
+    # o código vive DENTRO da imagem via COPY . . (Dockerfile)
+    # a imagem é autossuficiente — nenhum arquivo do servidor é montado
+    # se o container for destruído e recriado, o código está na imagem
+    # é o princípio de infraestrutura imutável que o Facebook documenta publicamente
+    # "qualquer container da mesma imagem é idêntico a qualquer outro"
