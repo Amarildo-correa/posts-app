@@ -32,7 +32,7 @@ RUN --mount=type=cache,target=/root/.npm \
 
 # copia o restante do código DEPOIS do npm install
 # ordem estratégica — mudança no código não invalida a layer do npm install
-# só invalida essa layer e as seguintes — as anteriores vêm do cache
+# só invalida essas layer e as seguintes — as anteriores vêm do cache
 # deploy típico: layer do npm install em cache = build em segundos
 COPY . .
 
