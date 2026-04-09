@@ -1,0 +1,68 @@
+# .dockerignore
+# ─────────────────────────────────────────────────────────────
+# Define o que NÃO entra dentro da imagem Docker
+# o COPY . . (Dockerfile) respeita esse arquivo automaticamente
+# mesmo princípio do .gitignore — mas pra construção da imagem
+# o Reddit otimiza o .dockerignore em todos os projetos
+# pra garantir imagens leves e deploys rápidos
+# ─────────────────────────────────────────────────────────────
+
+# ── Controle de versão ────────────────────────────────────────
+# pasta interna do Git — histórico de commits, refs, objetos
+# ~10MB que não tem utilidade nenhuma dentro de um container
+# o container não precisa saber do histórico do projeto
+.git/
+.gitignore
+
+# ── Configuração do Docker ────────────────────────────────────
+# os arquivos Docker não devem entrar dentro da imagem que eles geram
+# é uma referência circular — o container não precisa da sua própria receita
+# se alguém acessar o container, não verá a configuração de infraestrutura
+Dockerfile
+.dockerignore
+docker-compose.yml
+docker-compose.override.yml
+docker-compose.prod.yml
+
+# ── Dependências Node.js ──────────────────────────────────────
+# node_modules nunca entra na imagem via COPY
+# o RUN npm install (Dockerfile) gera o node_modules correto
+# compilado pra Linux Alpine dentro do container
+# copiar o node_modules do Windows quebraria módulos nativos
+# como bcrypt — binários incompatíveis entre Windows e Linux
+node_modules/
+
+# ── Variáveis de ambiente ─────────────────────────────────────
+# .env contém credenciais reais — NUNCA dentro da imagem
+# se a imagem for publicada no Docker Hub ficaria exposta
+# as variáveis são injetadas em runtime pelo docker-compose.yml
+# é o princípio de separação de segredos que o Facebook aplica
+.env
+.env.local
+.env.production
+
+# ── Logs de runtime ───────────────────────────────────────────
+# logs são gerados em runtime — não são código fonte
+# crescem infinitamente e não pertencem à imagem
+# o Docker tem seu próprio sistema de logs via docker logs (terminal)
+*.log
+logs/
+
+# ── Cache e arquivos temporários ─────────────────────────────
+# arquivos gerados automaticamente — não são código fonte
+# ocupam espaço na imagem sem nenhuma utilidade em produção
+.cache/
+*.tmp
+*.temp
+
+# ── Editor e sistema operacional ─────────────────────────────
+# configurações pessoais de editor — não pertencem ao servidor
+# arquivos gerados pelo sistema operacional — lixo de ambiente local
+.vscode/
+.DS_Store
+Thumbs.db
+
+# ── Documentação ─────────────────────────────────────────────
+# README não tem utilidade dentro do container
+# o servidor web não serve documentação — só a aplicação
+README.md
