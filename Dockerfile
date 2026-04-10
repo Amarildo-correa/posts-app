@@ -1,7 +1,7 @@
 # Dockerfile
-# imagem base oficial do Node.js com Alpine Linux
+# Imagem base oficial do Node.js com Alpine Linux
 # Alpine = distribuição Linux mínima — ~5MB em vez de ~180MB do Ubuntu
-# node:24-alpine = Node.js versão 24 LTS — versão estável de produção
+# node:24-alpine = Node.js versão 24 LTS — versão estável de Produção
 # suporte garantido até abril de 2028 — seguro para o Comentaaê escalar
 # é o mesmo padrão que o Reddit e o Instagram usam pra servir Node.js
 FROM node:24-alpine
