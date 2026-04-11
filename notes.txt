@@ -1,2 +1,7 @@
-Teste de commit
-Mais um testes
+Salvei, mas antes de criar as Stored Procedures, quero dividir o banco mysql em 2 containers:
+
+mysql_master → escrita
+
+mysql_replica → leitura
+
+Dois volumes separados, dois processos isolados, dados sincronizados via rede — nunca via filesystem compartilhado.
