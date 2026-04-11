@@ -44,6 +44,8 @@ EXPOSE 3000
 # executa migrations ANTES de subir o servidor
 # && garante que o servidor só sobe se todas as migrations passarem
 # se migrate.js encerrar com código 1 (falha) → node server.js não executa
-CMD ["sh", "-c", "node src/scripts/migrate.js && node server.js"]
+# produção: setup-replication → migrate → node
+# desenvolvimento: o command do override.yml sobrescreve esse CMD
+CMD ["sh", "-c", "node src/scripts/setup-replication.js && node src/scripts/migrate.js && node server.js"]
 
 

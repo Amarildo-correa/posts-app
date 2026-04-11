@@ -62,6 +62,8 @@ logs/
 .DS_Store
 Thumbs.db
 
+mysql/
+
 # ── Documentação ─────────────────────────────────────────────
 # README não tem utilidade dentro do container
 # o servidor web não serve documentação — só a aplicação

@@ -1,13 +1,9 @@
 // src/scripts/migrate.js
-// Script de migrations automáticas — executa antes do servidor subir
-// Garante que o banco está sempre na versão correta do schema
-// Mesmo princípio do sistema de migrations do Reddit e do Facebook
-// Roda como processo separado — servidor só sobe após todas as migrations passarem
-
 // ─────────────────────────────────────────────────────────────
-// ES Modules — "type":"module" no package.json habilita import/export
-// substitui require() do CommonJS — padrão moderno do Node.js
-// o Facebook e o Reddit usam ES Modules em todos os projetos novos
+// migrate.js conecta SEMPRE no Master
+// migrations são operações de escrita — CREATE TABLE, INSERT, ALTER
+// a Replica recebe essas mudanças automaticamente via replicação
+// nunca conecte o migrate.js na Replica — read_only bloquearia tudo
 // ─────────────────────────────────────────────────────────────
 
 // fs — módulo nativo do Node.js para operações de sistema de arquivos
@@ -53,9 +49,8 @@ const __dirname = path.dirname(__filename);
 // await garante que cada etapa termina antes da próxima começar
 // ─────────────────────────────────────────────────────────────
 async function executarMigrations() {
-    // conexão direta — não usa pool porque o script roda uma vez e encerra
-    // pool é para servidores que ficam rodando e reutilizam conexões
-    // aqui uma conexão única é mais eficiente e mais simples de gerenciar
+    // conexão direta no Master — migrations são escrita
+    // a Replica recebe as mudanças automaticamente via binary log
     const conexao = await mysql.createConnection({
         host: process.env.DB_HOST, // mysql_posts — hostname interno Docker
         port: process.env.DB_PORT, // 3306 — porta interna do MySQL
@@ -69,7 +64,7 @@ async function executarMigrations() {
         multipleStatements: true,
     });
 
-    console.log("[migrate] conectado ao MySQL com sucesso");
+    console.log("[migrate] conectado ao Master");
 
     // ─────────────────────────────────────────────────────────────
     // ETAPA 1 — cria a tabela de controle se ainda não existir
@@ -78,18 +73,9 @@ async function executarMigrations() {
     // ─────────────────────────────────────────────────────────────
     await conexao.execute(`
     CREATE TABLE IF NOT EXISTS migrations_executadas (
-
-      -- nome do arquivo executado — sem extensão .sql
-      -- ex: "001_criar_tabelas" — identifica unicamente cada migration
       arquivo      VARCHAR(255) NOT NULL,
-
-      -- timestamp de quando foi executado — auditoria completa
-      -- DEFAULT NOW() preenche automaticamente sem o script precisar passar
       executado_em DATETIME     NOT NULL DEFAULT NOW(),
-
-      -- arquivo é a chave primária — nunca executa o mesmo duas vezes
-      -- tentativa de inserir duplicata lança erro — proteção contra reexecução
-      PRIMARY KEY (arquivo)
+      PRIMARY KEY  (arquivo)
     )
   `);
 
@@ -169,7 +155,7 @@ async function executarMigrations() {
         // causaria erro — tabela ainda não existe
         .sort();
 
-    console.log(`[migrate] ${arquivos.length} arquivo(s) selecionado(s) para execução`);
+    console.log(`[migrate] ${arquivos.length} arquivo(s) selecionado(s)`);
 
     // ─────────────────────────────────────────────────────────────
     // ETAPA 4 — executa apenas as migrations pendentes em ordem
@@ -230,7 +216,7 @@ async function executarMigrations() {
 // é o mesmo padrão de exit codes que o GitHub Actions usa nos pipelines
 // ─────────────────────────────────────────────────────────────
 executarMigrations().catch((erro) => {
-    console.error("[migrate] ERRO — migration falhou:", erro.message);
+    console.error("[migrate] ERRO:", erro.message);
 
     // process.exit(1) — código 1 significa falha
     // o Docker interpreta código 1 como "processo falhou"

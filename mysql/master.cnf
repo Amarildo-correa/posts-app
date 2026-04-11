@@ -1,0 +1,45 @@
+# mysql/master.cnf
+# ─────────────────────────────────────────────────────────────
+# Configuração do MySQL Master — recebe escrita
+# Montado em /etc/mysql/conf.d/ dentro do container mysql_master
+# O MySQL lê automaticamente todos os .cnf dessa pasta na inicialização
+# É o mesmo padrão que o Instagram usa para configurar réplicas — config como código
+# ─────────────────────────────────────────────────────────────
+
+[mysqld]
+
+# ── Identidade na topologia de replicação ─────────────────────
+# server-id único — o MySQL usa esse número pra identificar
+# quem produziu cada evento no binary log
+# se dois servidores tiverem o mesmo id, a Replica rejeita a conexão
+# convenção universal: Master sempre usa 1
+server-id = 1
+
+# ── Binary log — coração da replicação ────────────────────────
+# habilita o registro sequencial de todas as operações de escrita
+# cada INSERT, UPDATE, DELETE gera um evento aqui
+# a Replica lê esses eventos via IO Thread para sincronizar
+# sem binary log: replicação impossível — MySQL nem tenta conectar
+log_bin = mysql-bin
+
+# ── Formato ROW — determinístico e seguro ─────────────────────
+# STATEMENT: registra a query SQL exata
+#   problema: NOW() executada em momentos diferentes = valores diferentes
+#   risco de dados divergentes entre Master e Replica
+# ROW: registra os valores exatos que foram inseridos/alterados
+#   determinístico — Replica sempre aplica os mesmos dados
+#   é o formato que o Facebook usa em toda topologia de replicação
+binlog_format = ROW
+
+# ── Retenção do binary log ────────────────────────────────────
+# 604800 segundos = 7 dias
+# se a Replica ficar offline por mais de 7 dias ela perde a posição
+# e precisa ser reinicializada do zero — snapshot + reconfiguração
+# o Reddit usa 14 dias em produção pra Replicas lentas ou com manutenção longa
+binlog_expire_logs_seconds = 604800
+
+# ── Escopo da replicação ──────────────────────────────────────
+# replica APENAS o banco posts_app_db
+# evita replicar bancos internos do MySQL: information_schema, performance_schema
+# reduz o volume de eventos no binary log — binary log menor = replicação mais rápida
+binlog_do_db = posts_app_db
