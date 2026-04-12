@@ -62,6 +62,9 @@ logs/
 .DS_Store
 Thumbs.db
 
+# Arquivos somente para aulas
+aulas/
+
 mysql/
 
 # ── Documentação ─────────────────────────────────────────────

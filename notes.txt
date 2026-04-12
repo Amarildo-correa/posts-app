@@ -1,1 +1,1 @@
-- ./init.sql:/docker-entrypoint-initdb.d/init.sql
+dados sincronizados via rede — nunca via filesystem compartilhado.

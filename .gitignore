@@ -21,6 +21,9 @@ node_modules/
 *.log
 logs/
 
+# Arquivos somente para aulas
+aulas/
+
 # cache gerado automaticamente
 .cache/
 

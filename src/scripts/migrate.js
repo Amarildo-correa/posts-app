@@ -52,7 +52,7 @@ async function executarMigrations() {
     // conexão direta no Master — migrations são escrita
     // a Replica recebe as mudanças automaticamente via binary log
     const conexao = await mysql.createConnection({
-        host: process.env.DB_HOST, // mysql_posts — hostname interno Docker
+        host: process.env.DB_HOST_MASTER, // mysql_posts — hostname interno Docker
         port: process.env.DB_PORT, // 3306 — porta interna do MySQL
         database: process.env.DB_NAME, // posts_app_db — banco do projeto
         user: process.env.DB_USER, // usuário do banco — vem do .env
@@ -71,11 +71,10 @@ async function executarMigrations() {
     // IF NOT EXISTS garante que não quebra se já existir
     // essa tabela é o coração do sistema — guarda o histórico de migrations
     // ─────────────────────────────────────────────────────────────
-    await conexao.execute(`
-    CREATE TABLE IF NOT EXISTS migrations_executadas (
-      arquivo      VARCHAR(255) NOT NULL,
-      executado_em DATETIME     NOT NULL DEFAULT NOW(),
-      PRIMARY KEY  (arquivo)
+    await conexao.execute(`CREATE TABLE IF NOT EXISTS migrations_executadas (
+                            arquivo      VARCHAR(255) NOT NULL,
+                            executado_em DATETIME     NOT NULL DEFAULT NOW(),
+                            PRIMARY KEY  (arquivo)
     )
   `);
 
