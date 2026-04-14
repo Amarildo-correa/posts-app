@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Fluxograma Interativo: Arquitetura Escalável com Docker</title>
+        <style>
+            :root {
+                --bg-color: #0f172a;
+                --panel-bg: #1e293b;
+                --text-main: #f8fafc;
+                --text-muted: #94a3b8;
+                --accent: #3b82f6;
+                --accent-hover: #2563eb;
+                --success: #10b981;
+                --line-color: #334155;
+            }
+
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+                font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            }
+
+            body {
+                background-color: var(--bg-color);
+                color: var(--text-main);
+                display: flex;
+                justify-content: center;
+                padding: 40px 20px;
+                min-height: 100vh;
+            }
+
+            .container {
+                display: flex;
+                max-width: 1000px;
+                width: 100%;
+                gap: 40px;
+            }
+
+            /* Timeline / Fluxograma */
+            .timeline-section {
+                flex: 1;
+                position: relative;
+            }
+
+            .timeline-line {
+                position: absolute;
+                top: 20px;
+                bottom: 20px;
+                left: 20px;
+                width: 4px;
+                background-color: var(--line-color);
+                z-index: 0;
+            }
+
+            .timeline-progress {
+                position: absolute;
+                top: 20px;
+                left: 20px;
+                width: 4px;
+                background-color: var(--accent);
+                z-index: 1;
+                transition: height 0.4s ease;
+                height: 0;
+            }
+
+            .step {
+                display: flex;
+                align-items: flex-start;
+                margin-bottom: 40px;
+                position: relative;
+                z-index: 2;
+                opacity: 0.4;
+                transition:
+                    opacity 0.3s ease,
+                    transform 0.3s ease;
+            }
+
+            .step.active {
+                opacity: 1;
+                transform: scale(1.02);
+            }
+
+            .step-indicator {
+                width: 44px;
+                height: 44px;
+                border-radius: 50%;
+                background-color: var(--panel-bg);
+                border: 4px solid var(--line-color);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                font-size: 1.2rem;
+                flex-shrink: 0;
+                transition:
+                    border-color 0.3s,
+                    background-color 0.3s;
+            }
+
+            .step.active .step-indicator {
+                border-color: var(--accent);
+                background-color: var(--accent);
+                color: white;
+            }
+
+            .step.success .step-indicator {
+                border-color: var(--success);
+                background-color: var(--success);
+                color: white;
+            }
+
+            .step-content {
+                margin-left: 20px;
+                background-color: var(--panel-bg);
+                padding: 15px 20px;
+                border-radius: 8px;
+                width: 100%;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+
+            .step-title {
+                font-size: 1.1rem;
+                font-weight: 600;
+                margin-bottom: 8px;
+                color: var(--accent);
+            }
+
+            .step-details {
+                font-size: 0.95rem;
+                color: var(--text-muted);
+                white-space: pre-line;
+                line-height: 1.5;
+            }
+
+            /* Painel Didático */
+            .didactic-section {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+                position: sticky;
+                top: 40px;
+                height: fit-content;
+            }
+
+            .didactic-panel {
+                background-color: rgba(59, 130, 246, 0.1);
+                border-left: 4px solid var(--accent);
+                padding: 24px;
+                border-radius: 0 8px 8px 0;
+                opacity: 0;
+                transform: translateX(20px);
+                transition:
+                    opacity 0.4s ease,
+                    transform 0.4s ease;
+            }
+
+            .didactic-panel.visible {
+                opacity: 1;
+                transform: translateX(0);
+            }
+
+            .panel-title {
+                font-size: 1.2rem;
+                color: var(--accent);
+                margin-bottom: 12px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .panel-text {
+                font-size: 1rem;
+                line-height: 1.6;
+                color: var(--text-main);
+            }
+
+            .controls {
+                display: flex;
+                gap: 15px;
+                margin-top: auto;
+            }
+
+            button {
+                padding: 12px 24px;
+                font-size: 1rem;
+                font-weight: bold;
+                border: none;
+                border-radius: 6px;
+                cursor: pointer;
+                transition: background-color 0.2s;
+            }
+
+            .btn-next {
+                background-color: var(--accent);
+                color: white;
+                flex: 1;
+            }
+
+            .btn-next:hover {
+                background-color: var(--accent-hover);
+            }
+            .btn-next:disabled {
+                background-color: var(--line-color);
+                cursor: not-allowed;
+                color: var(--text-muted);
+            }
+
+            .btn-reset {
+                background-color: transparent;
+                color: var(--text-muted);
+                border: 1px solid var(--line-color);
+            }
+
+            .btn-reset:hover {
+                background-color: var(--line-color);
+                color: white;
+            }
+
+            @media (max-width: 768px) {
+                .container {
+                    flex-direction: column;
+                }
+                .didactic-section {
+                    position: relative;
+                    top: 0;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="timeline-section">
+                <div class="timeline-line"></div>
+                <div class="timeline-progress" id="progress-line"></div>
+                <div id="steps-container"></div>
+            </div>
+
+            <div class="didactic-section">
+                <div class="didactic-panel" id="info-panel">
+                    <div class="panel-title">💡 Observação Didática</div>
+                    <div class="panel-text" id="info-text">Clique em "Avançar Etapa" para iniciar o processo de subida dos containers.</div>
+                </div>
+
+                <div class="controls">
+                    <button class="btn-reset" onclick="resetFlow()">Reiniciar</button>
+                    <button class="btn-next" id="next-btn" onclick="nextStep()">Avançar Etapa 🚀</button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            const flowData = [
+                {
+                    title: "docker compose up --build",
+                    icon: "🐳",
+                    details: "O comando inicial que dispara toda a orquestração.",
+                    note: "O ponto de partida. Ao construir a infraestrutura como código, garantimos que o ambiente do nosso 'laboratório prático' seja idêntico ao de produção. Isso isola o ambiente e padroniza as dependências.",
+                },
+                {
+                    title: "Leitura do .env",
+                    icon: "📄",
+                    details: "Variáveis distribuídas para todos os containers.",
+                    note: "Seguindo os princípios de aplicações escaláveis (12-factor app), manter as credenciais e configurações de rede no arquivo .env permite que a mesma base de código rode em diferentes ambientes sem hardcoding.",
+                },
+                {
+                    title: "Construção das Imagens",
+                    icon: "📦",
+                    details: "• mysql:8.0 (pronta do Hub)\n• node:20-alpine (customizada via Dockerfile)",
+                    note: "Optar pela versão 'alpine' para o Node.js reduz drasticamente o tamanho da imagem e a superfície de ataque, otimizando o tempo de deploy dos nossos containers.",
+                },
+                {
+                    title: "Criação de Volumes",
+                    icon: "💾",
+                    details: "• mysql_master_data\n• mysql_replica_data",
+                    note: "Discos físicos isolados. Se o container for destruído, os dados estruturais não se perdem. Separar o disco do master e da replica é o primeiro passo físico para a nossa divisão de leitura/escrita.",
+                },
+                {
+                    title: "Bancos e Healthcheck",
+                    icon: "🩺",
+                    details: "mysql_master sobe → healthcheck passa ✓\nmysql_replica sobe → healthcheck passa ✓",
+                    note: "O healthcheck é uma rede de segurança. Ele impede que a aplicação Node.js tente conectar antes de o banco de dados estar 100% apto a receber queries, evitando crashes silenciosos na inicialização.",
+                },
+                {
+                    title: "App Posts e Automação",
+                    icon: "⚙️",
+                    details: "1. setup-replication.js\n2. migrate.js (tabelas, índices, seeds)\n3. nodemon server.js",
+                    note: "Automação total no boot. A aplicação configura a replicação lógica (Master -> Replica) pela rede interna do Docker, estrutura os índices fundamentais para performance e levanta o servidor SSR.",
+                },
+                {
+                    title: "Roteamento de Banco (Pools)",
+                    icon: "🔀",
+                    details: "• poolEscrita → mysql_master (INSERT, UPDATE)\n• poolLeitura → mysql_replica (SELECT feed, perfil)",
+                    note: "O coração da nossa arquitetura. Em plataformas como redes sociais, temos 10x mais leituras do que escritas. Direcionar as requisições de feed para a Replica salva o Master de gargalos e permite escala horizontal.",
+                },
+                {
+                    title: "Sistema Disponível",
+                    icon: "🚀",
+                    details: "localhost:3000\nBanco saudável, app preparado para escalar.",
+                    note: "Fluxo concluído! Agora as páginas podem ser entregues usando SSR com Express Handlebars, garantindo que o HTML chegue ao usuário rapidamente para máxima performance e indexação de SEO.",
+                },
+            ];
+
+            let currentStep = -1;
+            const container = document.getElementById("steps-container");
+            const progressLine = document.getElementById("progress-line");
+            const infoPanel = document.getElementById("info-panel");
+            const infoText = document.getElementById("info-text");
+            const nextBtn = document.getElementById("next-btn");
+
+            function initFlow() {
+                flowData.forEach((step, index) => {
+                    const stepEl = document.createElement("div");
+                    stepEl.className = "step";
+                    stepEl.id = `step-${index}`;
+
+                    stepEl.innerHTML = `
+                    <div class="step-indicator">${step.icon}</div>
+                    <div class="step-content">
+                        <div class="step-title">${step.title}</div>
+                        <div class="step-details">${step.details}</div>
+                    </div>
+                `;
+                    container.appendChild(stepEl);
+                });
+            }
+
+            function nextStep() {
+                if (currentStep < flowData.length - 1) {
+                    // Atualizar passo anterior para sucesso (verde)
+                    if (currentStep >= 0) {
+                        document.getElementById(`step-${currentStep}`).classList.remove("active");
+                        document.getElementById(`step-${currentStep}`).classList.add("success");
+                    }
+
+                    currentStep++;
+
+                    // Ativar passo atual
+                    const activeEl = document.getElementById(`step-${currentStep}`);
+                    activeEl.classList.add("active");
+
+                    // Atualizar linha de progresso
+                    const totalHeight = container.offsetHeight;
+                    const stepHeight = totalHeight / flowData.length;
+                    progressLine.style.height = `${currentStep * stepHeight + stepHeight / 2}px`;
+
+                    // Atualizar painel didático
+                    infoPanel.classList.remove("visible");
+                    setTimeout(() => {
+                        infoText.innerText = flowData[currentStep].note;
+                        infoPanel.classList.add("visible");
+                    }, 200);
+
+                    // Desabilitar botão no fim
+                    if (currentStep === flowData.length - 1) {
+                        nextBtn.innerText = "Fluxo Concluído 🎉";
+                        nextBtn.disabled = true;
+                    }
+                }
+            }
+
+            function resetFlow() {
+                currentStep = -1;
+                progressLine.style.height = "0px";
+
+                nextBtn.innerText = "Avançar Etapa 🚀";
+                nextBtn.disabled = false;
+
+                infoPanel.classList.remove("visible");
+                setTimeout(() => {
+                    infoText.innerText = 'Clique em "Avançar Etapa" para iniciar o processo de subida dos containers.';
+                    infoPanel.classList.add("visible");
+                }, 200);
+
+                const steps = document.querySelectorAll(".step");
+                steps.forEach((step) => {
+                    step.classList.remove("active", "success");
+                });
+            }
+
+            // Inicializar a tela
+            initFlow();
+        </script>
+    </body>
+</html>

@@ -1,0 +1,696 @@
+<!doctype html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>docker compose up --build — fluxo completo</title>
+        <style>
+            @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap");
+
+            :root {
+                --bg: #0d0f17;
+                --bg2: #13161f;
+                --bg3: #1c2030;
+                --border: rgba(255, 255, 255, 0.06);
+                --border2: rgba(255, 255, 255, 0.12);
+                --text: #e2e4f0;
+                --text2: #7b80a0;
+                --text3: #3a3f5a;
+                --purple: #a78bfa;
+                --purple-bg: rgba(167, 139, 250, 0.08);
+                --purple-border: rgba(167, 139, 250, 0.2);
+                --blue: #60a5fa;
+                --blue-bg: rgba(96, 165, 250, 0.08);
+                --blue-border: rgba(96, 165, 250, 0.2);
+                --green: #34d399;
+                --green-bg: rgba(52, 211, 153, 0.08);
+                --green-border: rgba(52, 211, 153, 0.2);
+                --amber: #fbbf24;
+                --amber-bg: rgba(251, 191, 36, 0.08);
+                --amber-border: rgba(251, 191, 36, 0.2);
+                --coral: #f87171;
+                --coral-bg: rgba(248, 113, 113, 0.08);
+                --coral-border: rgba(248, 113, 113, 0.2);
+                --mono: "JetBrains Mono", monospace;
+                --sans: "Plus Jakarta Sans", sans-serif;
+            }
+
+            *,
+            *::before,
+            *::after {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            body {
+                font-family: var(--sans);
+                background: var(--bg);
+                color: var(--text);
+                min-height: 100vh;
+                padding: 2.5rem 1.5rem 5rem;
+            }
+
+            .page {
+                max-width: 900px;
+                margin: 0 auto;
+            }
+
+            header {
+                text-align: center;
+                margin-bottom: 3rem;
+            }
+
+            .cmd {
+                display: inline-block;
+                font-family: var(--mono);
+                font-size: 16px;
+                color: var(--green);
+                background: var(--green-bg);
+                border: 1px solid var(--green-border);
+                padding: 6px 16px;
+                border-radius: 999px;
+                margin-bottom: 1rem;
+                letter-spacing: 0.02em;
+            }
+
+            header h1 {
+                font-size: 26px;
+                font-weight: 600;
+                color: var(--text);
+                letter-spacing: -0.03em;
+                margin-bottom: 8px;
+            }
+
+            header p {
+                font-size: 16px;
+                color: var(--text2);
+                line-height: 1.7;
+            }
+
+            /* FASE */
+            .fase {
+                margin-bottom: 2rem;
+                position: relative;
+            }
+
+            .fase-label {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 1rem;
+            }
+
+            .fase-num {
+                width: 28px;
+                height: 28px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 16px;
+                font-weight: 600;
+                flex-shrink: 0;
+            }
+
+            .fase-title {
+                font-size: 16px;
+                font-weight: 600;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+            }
+
+            /* CARDS */
+            .cards {
+                display: grid;
+                gap: 10px;
+            }
+
+            .cards-2 {
+                grid-template-columns: 1fr 1fr;
+            }
+            .cards-3 {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+
+            .card {
+                background: var(--bg2);
+                border: 1px solid var(--border);
+                border-radius: 14px;
+                padding: 1.1rem 1.25rem;
+                position: relative;
+                transition: border-color 0.2s;
+            }
+
+            .card:hover {
+                border-color: var(--border2);
+            }
+
+            .card-icon {
+                font-size: 16px;
+                font-weight: 600;
+                letter-spacing: 0.05em;
+                margin-bottom: 8px;
+                padding: 3px 8px;
+                border-radius: 999px;
+                display: inline-block;
+            }
+
+            .card-title {
+                font-size: 16px;
+                font-weight: 600;
+                color: var(--text);
+                margin-bottom: 5px;
+                letter-spacing: -0.01em;
+                font-family: var(--mono);
+            }
+
+            .card-desc {
+                font-size: 16px;
+                color: var(--text2);
+                line-height: 1.65;
+            }
+
+            .card-desc code {
+                font-family: var(--mono);
+                font-size: 16px;
+                color: var(--amber);
+                background: var(--amber-bg);
+                padding: 1px 4px;
+                border-radius: 3px;
+            }
+
+            /* ARROW */
+            .arrow-down {
+                display: flex;
+                justify-content: center;
+                margin: 8px 0;
+            }
+
+            .arrow-down svg {
+                opacity: 0.3;
+            }
+
+            /* CONNECTOR */
+            .connector {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin: 8px 0;
+                padding: 0 4px;
+            }
+
+            .conn-line {
+                flex: 1;
+                height: 1px;
+                background: var(--border2);
+            }
+
+            .conn-label {
+                font-size: 16px;
+                color: var(--text3);
+                font-family: var(--mono);
+                white-space: nowrap;
+            }
+
+            /* COLORS */
+            .purple .fase-num {
+                background: var(--purple-bg);
+                color: var(--purple);
+                border: 1px solid var(--purple-border);
+            }
+            .purple .fase-title {
+                color: var(--purple);
+            }
+            .purple .card {
+                border-color: var(--purple-border);
+            }
+            .purple .card-icon {
+                background: var(--purple-bg);
+                color: var(--purple);
+            }
+
+            .blue .fase-num {
+                background: var(--blue-bg);
+                color: var(--blue);
+                border: 1px solid var(--blue-border);
+            }
+            .blue .fase-title {
+                color: var(--blue);
+            }
+            .blue .card {
+                border-color: var(--blue-border);
+            }
+            .blue .card-icon {
+                background: var(--blue-bg);
+                color: var(--blue);
+            }
+
+            .green .fase-num {
+                background: var(--green-bg);
+                color: var(--green);
+                border: 1px solid var(--green-border);
+            }
+            .green .fase-title {
+                color: var(--green);
+            }
+            .green .card {
+                border-color: var(--green-border);
+            }
+            .green .card-icon {
+                background: var(--green-bg);
+                color: var(--green);
+            }
+
+            .amber .fase-num {
+                background: var(--amber-bg);
+                color: var(--amber);
+                border: 1px solid var(--amber-border);
+            }
+            .amber .fase-title {
+                color: var(--amber);
+            }
+            .amber .card {
+                border-color: var(--amber-border);
+            }
+            .amber .card-icon {
+                background: var(--amber-bg);
+                color: var(--amber);
+            }
+
+            .coral .fase-num {
+                background: var(--coral-bg);
+                color: var(--coral);
+                border: 1px solid var(--coral-border);
+            }
+            .coral .fase-title {
+                color: var(--coral);
+            }
+            .coral .card {
+                border-color: var(--coral-border);
+            }
+            .coral .card-icon {
+                background: var(--coral-bg);
+                color: var(--coral);
+            }
+
+            /* ENV BOX */
+            .env-box {
+                background: var(--bg2);
+                border: 1px solid var(--amber-border);
+                border-radius: 14px;
+                padding: 1.1rem 1.25rem;
+                margin-bottom: 10px;
+            }
+
+            .env-title {
+                font-size: 16px;
+                font-family: var(--mono);
+                color: var(--amber);
+                font-weight: 500;
+                margin-bottom: 10px;
+            }
+
+            .env-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 6px;
+            }
+
+            .env-row {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 16px;
+                font-family: var(--mono);
+                color: var(--text2);
+                background: var(--bg3);
+                padding: 5px 8px;
+                border-radius: 6px;
+            }
+
+            .env-key {
+                color: var(--amber);
+                font-weight: 500;
+            }
+
+            /* FLOW FINAL */
+            .flow-final {
+                background: var(--green-bg);
+                border: 1px solid var(--green-border);
+                border-radius: 14px;
+                padding: 1.25rem 1.5rem;
+                display: flex;
+                align-items: center;
+                gap: 16px;
+            }
+
+            .flow-final-icon {
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                background: rgba(52, 211, 153, 0.15);
+                border: 1px solid var(--green-border);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 18px;
+                flex-shrink: 0;
+            }
+
+            .flow-final-text .title {
+                font-size: 16px;
+                font-weight: 600;
+                color: var(--green);
+                margin-bottom: 3px;
+            }
+
+            .flow-final-text .sub {
+                font-size: 16px;
+                color: var(--text2);
+                line-height: 1.6;
+                font-family: var(--mono);
+            }
+
+            /* SECTION DIVIDER */
+            .section-divider {
+                text-align: center;
+                margin: 1.5rem 0;
+                position: relative;
+            }
+
+            .section-divider::before {
+                content: "";
+                position: absolute;
+                top: 50%;
+                left: 0;
+                right: 0;
+                height: 1px;
+                background: var(--border);
+            }
+
+            .section-divider span {
+                position: relative;
+                background: var(--bg);
+                padding: 0 12px;
+                font-size: 16px;
+                color: var(--text3);
+                font-family: var(--mono);
+            }
+
+            /* ANIMATE */
+            .fase {
+                opacity: 0;
+                transform: translateY(16px);
+                animation: rise 0.5s ease forwards;
+            }
+
+            .fase:nth-child(1) {
+                animation-delay: 0.1s;
+            }
+            .fase:nth-child(2) {
+                animation-delay: 0.25s;
+            }
+            .fase:nth-child(3) {
+                animation-delay: 0.4s;
+            }
+            .fase:nth-child(4) {
+                animation-delay: 0.55s;
+            }
+            .fase:nth-child(5) {
+                animation-delay: 0.7s;
+            }
+            .fase:nth-child(6) {
+                animation-delay: 0.85s;
+            }
+            .fase:nth-child(7) {
+                animation-delay: 1s;
+            }
+
+            @keyframes rise {
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            @media (max-width: 640px) {
+                .cards-2,
+                .cards-3 {
+                    grid-template-columns: 1fr;
+                }
+                .env-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="page">
+            <header>
+                <div class="cmd">$ docker compose up --build</div>
+                <h1>Fluxo completo de inicialização</h1>
+                <p>O que acontece por baixo desde o comando até o servidor Node.js conectado ao MySQL Master e Replica.</p>
+            </header>
+
+            <!-- FASE 1 -->
+            <div class="fase purple">
+                <div class="fase-label">
+                    <div class="fase-num">1</div>
+                    <div class="fase-title">Docker lê o .env e o docker-compose.yml</div>
+                </div>
+                <div class="env-box">
+                    <div class="env-title">.env (pasta raiz — fora do Docker — nunca entra na imagem)</div>
+                    <div class="env-grid">
+                        <div class="env-row"><span class="env-key">DB_HOST_MASTER</span>= mysql_master</div>
+                        <div class="env-row"><span class="env-key">DB_HOST_REPLICA</span>= mysql_replica</div>
+                        <div class="env-row"><span class="env-key">DB_NAME</span>= posts_app_db</div>
+                        <div class="env-row"><span class="env-key">DB_USER</span>= posts_user</div>
+                        <div class="env-row"><span class="env-key">DB_PASSWORD</span>= ••••••••</div>
+                        <div class="env-row"><span class="env-key">DB_ROOT_PASSWORD</span>= ••••••••</div>
+                        <div class="env-row"><span class="env-key">REPLICATION_USER</span>= replicador</div>
+                        <div class="env-row"><span class="env-key">SESSION_SECRET</span>= ••••••••</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">docker-compose.yml</div>
+                    <div class="card-title">distribui variáveis para os containers</div>
+                    <div class="card-desc">
+                        O Compose lê o <code>.env</code> e injeta cada variável no <code>process.env</code> de cada container via <code>environment:</code>. O Node.js, o MySQL Master e o MySQL Replica
+                        nunca tocam o arquivo <code>.env</code> diretamente — recebem tudo pronto via Docker.
+                    </div>
+                </div>
+            </div>
+
+            <div class="arrow-down">
+                <svg width="24" height="32" viewBox="0 0 24 32" fill="none">
+                    <line x1="12" y1="0" x2="12" y2="24" stroke="#a78bfa" stroke-width="1.5" />
+                    <path d="M6 18L12 26L18 18" stroke="#a78bfa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                </svg>
+            </div>
+
+            <!-- FASE 2 -->
+            <div class="fase blue">
+                <div class="fase-label">
+                    <div class="fase-num">2</div>
+                    <div class="fase-title">Build das imagens</div>
+                </div>
+                <div class="cards cards-2">
+                    <div class="card">
+                        <div class="card-icon">Dockerfile</div>
+                        <div class="card-title">imagem do Node.js</div>
+                        <div class="card-desc">
+                            <code>FROM node:20-alpine</code> → base mínima Linux<br /><code>COPY package.json</code> → só o manifesto<br /><code>RUN npm install</code> → BuildKit cache mount (~5s com
+                            cache)<br /><code>COPY . .</code> → código fonte entra na imagem<br /><code>.dockerignore</code> bloqueia <code>node_modules/</code>, <code>.env</code>, <code>mysql/</code>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">mysql:8.0</div>
+                        <div class="card-title">imagem do MySQL</div>
+                        <div class="card-desc">
+                            Imagem oficial do Docker Hub — sem Dockerfile necessário. Versão fixada em <code>8.0</code> — nunca <code>latest</code>. Usada para criar os dois containers:
+                            <code>mysql_master</code> e <code>mysql_replica</code>. Mesma imagem, IPs internos diferentes.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="arrow-down">
+                <svg width="24" height="32" viewBox="0 0 24 32" fill="none">
+                    <line x1="12" y1="0" x2="12" y2="24" stroke="#60a5fa" stroke-width="1.5" />
+                    <path d="M6 18L12 26L18 18" stroke="#60a5fa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                </svg>
+            </div>
+
+            <!-- FASE 3 -->
+            <div class="fase amber">
+                <div class="fase-label">
+                    <div class="fase-num">3</div>
+                    <div class="fase-title">Criação dos volumes</div>
+                </div>
+                <div class="cards cards-2">
+                    <div class="card">
+                        <div class="card-icon">mysql_master_data</div>
+                        <div class="card-title">disco exclusivo do Master</div>
+                        <div class="card-desc">
+                            Volume persistente montado em <code>/var/lib/mysql</code> do container <code>mysql_master</code>. Sobrevive ao <code>docker compose down</code>. Só some com
+                            <code>docker compose down -v</code>. Completamente isolado do volume da Replica.
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">mysql_replica_data</div>
+                        <div class="card-title">disco exclusivo da Replica</div>
+                        <div class="card-desc">
+                            Volume persistente montado em <code>/var/lib/mysql</code> do container <code>mysql_replica</code>. Dados chegam via rede — nunca via disco compartilhado. O relay log vive
+                            aqui.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="arrow-down">
+                <svg width="24" height="32" viewBox="0 0 24 32" fill="none">
+                    <line x1="12" y1="0" x2="12" y2="24" stroke="#fbbf24" stroke-width="1.5" />
+                    <path d="M6 18L12 26L18 18" stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                </svg>
+            </div>
+
+            <!-- FASE 4 -->
+            <div class="fase coral">
+                <div class="fase-label">
+                    <div class="fase-num">4</div>
+                    <div class="fase-title">Containers MySQL sobem</div>
+                </div>
+                <div class="cards cards-2">
+                    <div class="card">
+                        <div class="card-icon">mysql_master</div>
+                        <div class="card-title">IP interno único — porta 3306</div>
+                        <div class="card-desc">
+                            Lê <code>master.cnf</code> montado como <code>:ro</code>. Ativa binary log (<code>mysql-bin</code>). Define <code>server-id = 1</code>. Cria banco
+                            <code>posts_app_db</code> automaticamente. Healthcheck verifica via <code>mysqladmin ping</code> a cada 5s.
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">mysql_replica</div>
+                        <div class="card-title">IP interno único — porta 3306</div>
+                        <div class="card-desc">
+                            Lê <code>replica.cnf</code> montado como <code>:ro</code>. Ativa relay log (<code>mysql-relay-bin</code>). Define <code>server-id = 2</code>. Ativa
+                            <code>read_only = ON</code>. Sobe só depois que o Master passa no healthcheck.
+                        </div>
+                    </div>
+                </div>
+                <div class="section-divider"><span>mesma imagem mysql:8.0 — IPs diferentes na rede interna Docker — porta 3306 sem conflito</span></div>
+            </div>
+
+            <div class="arrow-down">
+                <svg width="24" height="32" viewBox="0 0 24 32" fill="none">
+                    <line x1="12" y1="0" x2="12" y2="24" stroke="#f87171" stroke-width="1.5" />
+                    <path d="M6 18L12 26L18 18" stroke="#f87171" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                </svg>
+            </div>
+
+            <!-- FASE 5 -->
+            <div class="fase purple">
+                <div class="fase-label">
+                    <div class="fase-num">5</div>
+                    <div class="fase-title">setup-replication.js — roda uma vez e encerra</div>
+                </div>
+                <div class="cards cards-3">
+                    <div class="card">
+                        <div class="card-icon">Master (root)</div>
+                        <div class="card-title">cria usuário replicador</div>
+                        <div class="card-desc">Conecta no Master como root. Cria usuário com privilégio exclusivo <code>REPLICATION SLAVE</code>. Lê posição atual do binary log.</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">Replica (root)</div>
+                        <div class="card-title">aponta pro Master</div>
+                        <div class="card-desc"><code>CHANGE REPLICATION SOURCE TO</code> informa endereço, usuário e posição do binary log de onde começar a ler.</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">verificação</div>
+                        <div class="card-title">START REPLICA</div>
+                        <div class="card-desc">Inicia IO Thread e SQL Thread. Verifica se ambos estão com status <code>Running = Yes</code>. Encerra com <code>exit(0)</code>.</div>
+                    </div>
+                </div>
+                <div class="section-divider"><span>após esse passo — IO Thread e SQL Thread ficam vivos dentro do container mysql_replica continuamente</span></div>
+            </div>
+
+            <div class="arrow-down">
+                <svg width="24" height="32" viewBox="0 0 24 32" fill="none">
+                    <line x1="12" y1="0" x2="12" y2="24" stroke="#a78bfa" stroke-width="1.5" />
+                    <path d="M6 18L12 26L18 18" stroke="#a78bfa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                </svg>
+            </div>
+
+            <!-- FASE 6 -->
+            <div class="fase blue">
+                <div class="fase-label">
+                    <div class="fase-num">6</div>
+                    <div class="fase-title">migrate.js — roda uma vez e encerra</div>
+                </div>
+                <div class="cards cards-3">
+                    <div class="card">
+                        <div class="card-icon">Master (escrita)</div>
+                        <div class="card-title">cria migrations_executadas</div>
+                        <div class="card-desc">Conecta no Master via <code>DB_HOST_MASTER</code>. Cria a tabela de controle se não existir. Consulta quais migrations já rodaram.</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">migrations/</div>
+                        <div class="card-title">executa só os arquivos novos</div>
+                        <div class="card-desc">
+                            Lê pasta <code>migrations/</code> em ordem numérica. Filtra <code>local_*</code> em produção. Executa só o que ainda não está na tabela de controle.
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">Replica (auto)</div>
+                        <div class="card-title">recebe via replicação</div>
+                        <div class="card-desc">Todos os <code>CREATE TABLE</code> e <code>INSERT</code> do Master chegam automaticamente na Replica via binary log. Nenhuma configuração extra.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="arrow-down">
+                <svg width="24" height="32" viewBox="0 0 24 32" fill="none">
+                    <line x1="12" y1="0" x2="12" y2="24" stroke="#60a5fa" stroke-width="1.5" />
+                    <path d="M6 18L12 26L18 18" stroke="#60a5fa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                </svg>
+            </div>
+
+            <!-- FASE 7 -->
+            <div class="fase green">
+                <div class="fase-label">
+                    <div class="fase-num">7</div>
+                    <div class="fase-title">node server.js — fica vivo</div>
+                </div>
+                <div class="cards cards-2">
+                    <div class="card">
+                        <div class="card-icon">poolEscrita</div>
+                        <div class="card-title">→ mysql_master : 3306</div>
+                        <div class="card-desc">
+                            <code>connectionLimit: 5</code> — 10% do tráfego. Recebe <code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code>. Stored Procedures de escrita. Nunca recebe
+                            <code>SELECT</code> do feed.
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">poolLeitura</div>
+                        <div class="card-title">→ mysql_replica : 3306</div>
+                        <div class="card-desc">
+                            <code>connectionLimit: 20</code> — 90% do tráfego. Recebe <code>SELECT</code> do feed, perfil, busca. Nunca recebe operações de escrita —
+                            <code>read_only = ON</code> bloquearia.
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 10px">
+                    <div class="flow-final">
+                        <div class="flow-final-icon">✓</div>
+                        <div class="flow-final-text">
+                            <div class="title">localhost:3000 disponível</div>
+                            <div class="sub">GET /health → { status: "ok", master: "conectado", replica: "conectado" }</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

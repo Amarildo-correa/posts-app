@@ -1,0 +1,699 @@
+<!doctype html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MySQL Master/Replica — 10 Passos</title>
+        <style>
+            @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Sora:wght@300;400;500;600&display=swap");
+
+            :root {
+                --bg: #0b0e14;
+                --bg2: #12161f;
+                --bg3: #1a1f2e;
+                --bg4: #222840;
+                --border: rgba(255, 255, 255, 0.07);
+                --border2: rgba(255, 255, 255, 0.12);
+                --text: #e8eaf2;
+                --text2: #8b90a8;
+                --text3: #4a5070;
+                --blue: #4f8ef7;
+                --blue-bg: rgba(79, 142, 247, 0.1);
+                --blue-border: rgba(79, 142, 247, 0.25);
+                --green: #34d399;
+                --green-bg: rgba(52, 211, 153, 0.1);
+                --green-border: rgba(52, 211, 153, 0.25);
+                --amber: #fbbf24;
+                --amber-bg: rgba(251, 191, 36, 0.1);
+                --amber-border: rgba(251, 191, 36, 0.25);
+                --gray-bg: rgba(255, 255, 255, 0.05);
+                --gray-border: rgba(255, 255, 255, 0.1);
+                --mono: "JetBrains Mono", monospace;
+                --sans: "Sora", sans-serif;
+                --radius: 10px;
+                --radius-lg: 16px;
+            }
+
+            *,
+            *::before,
+            *::after {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            body {
+                font-family: var(--sans);
+                background: var(--bg);
+                color: var(--text);
+                min-height: 100vh;
+                padding: 2rem 1rem 4rem;
+            }
+
+            .page {
+                max-width: 780px;
+                margin: 0 auto;
+            }
+
+            header {
+                margin-bottom: 2.5rem;
+                padding-bottom: 1.5rem;
+                border-bottom: 1px solid var(--border);
+            }
+
+            header h1 {
+                font-size: 22px;
+                font-weight: 600;
+                color: var(--text);
+                letter-spacing: -0.03em;
+                margin-bottom: 6px;
+            }
+
+            header p {
+                font-size: 13px;
+                color: var(--text2);
+                line-height: 1.7;
+            }
+
+            .progress-bar {
+                height: 2px;
+                background: var(--border);
+                border-radius: 999px;
+                margin-bottom: 1.5rem;
+                overflow: hidden;
+            }
+
+            .progress-fill {
+                height: 100%;
+                background: var(--blue);
+                border-radius: 999px;
+                transition: width 0.4s ease;
+            }
+
+            .step-nav {
+                display: flex;
+                gap: 6px;
+                flex-wrap: wrap;
+                margin-bottom: 1.75rem;
+            }
+
+            .s-btn {
+                padding: 5px 12px;
+                font-size: 11px;
+                font-family: var(--sans);
+                font-weight: 500;
+                border-radius: 999px;
+                border: 1px solid var(--border2);
+                background: transparent;
+                color: var(--text2);
+                cursor: pointer;
+                transition: all 0.2s;
+                letter-spacing: 0.01em;
+            }
+
+            .s-btn:hover {
+                background: var(--bg3);
+                color: var(--text);
+            }
+            .s-btn.active {
+                background: var(--blue-bg);
+                color: var(--blue);
+                border-color: var(--blue-border);
+            }
+            .s-btn.done {
+                background: var(--green-bg);
+                color: var(--green);
+                border-color: var(--green-border);
+            }
+
+            .panel {
+                display: none;
+                animation: fadeIn 0.25s ease;
+            }
+            .panel.active {
+                display: block;
+            }
+
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(6px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            .card {
+                background: var(--bg2);
+                border: 1px solid var(--border);
+                border-radius: var(--radius-lg);
+                padding: 1.5rem;
+                margin-bottom: 12px;
+            }
+
+            .card-head {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 1rem;
+            }
+
+            .badge {
+                font-size: 10px;
+                padding: 3px 9px;
+                border-radius: 999px;
+                font-weight: 600;
+                letter-spacing: 0.05em;
+                text-transform: uppercase;
+            }
+
+            .badge-blue {
+                background: var(--blue-bg);
+                color: var(--blue);
+                border: 1px solid var(--blue-border);
+            }
+            .badge-green {
+                background: var(--green-bg);
+                color: var(--green);
+                border: 1px solid var(--green-border);
+            }
+            .badge-amber {
+                background: var(--amber-bg);
+                color: var(--amber);
+                border: 1px solid var(--amber-border);
+            }
+            .badge-gray {
+                background: var(--gray-bg);
+                color: var(--text2);
+                border: 1px solid var(--gray-border);
+            }
+
+            .card-title {
+                font-size: 16px;
+                font-weight: 600;
+                color: var(--text);
+                letter-spacing: -0.02em;
+            }
+
+            .card-sub {
+                font-size: 13px;
+                color: var(--text2);
+                line-height: 1.75;
+                margin-bottom: 1rem;
+            }
+
+            .file-row {
+                display: flex;
+                align-items: flex-start;
+                gap: 10px;
+                padding: 8px 12px;
+                background: var(--bg3);
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                margin-bottom: 6px;
+                font-size: 12px;
+                font-family: var(--mono);
+            }
+
+            .file-row .fname {
+                color: var(--blue);
+                font-weight: 500;
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+
+            .file-row .fdesc {
+                color: var(--text2);
+                line-height: 1.5;
+            }
+
+            .arrow-row {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                flex-wrap: wrap;
+                margin: 10px 0;
+            }
+
+            .abox {
+                background: var(--bg3);
+                border: 1px solid var(--border2);
+                border-radius: var(--radius);
+                padding: 6px 12px;
+                font-size: 12px;
+                font-family: var(--mono);
+                color: var(--text);
+                font-weight: 500;
+                white-space: nowrap;
+            }
+
+            .arr {
+                color: var(--text3);
+                font-size: 16px;
+            }
+
+            .divider {
+                border: none;
+                border-top: 1px solid var(--border);
+                margin: 14px 0;
+            }
+
+            .insight {
+                background: var(--bg3);
+                border-left: 3px solid var(--blue);
+                border-radius: 0 var(--radius) var(--radius) 0;
+                padding: 10px 14px;
+                font-size: 12px;
+                color: var(--text2);
+                line-height: 1.6;
+                margin-top: 10px;
+            }
+
+            .insight code {
+                font-family: var(--mono);
+                color: var(--amber);
+                font-size: 11px;
+            }
+
+            .flow-complete {
+                background: var(--bg2);
+                border: 1px solid var(--green-border);
+                border-radius: var(--radius-lg);
+                padding: 1.5rem;
+            }
+
+            .flow-step {
+                display: flex;
+                align-items: flex-start;
+                gap: 12px;
+                padding: 8px 0;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .flow-step:last-child {
+                border-bottom: none;
+            }
+
+            .flow-num {
+                width: 24px;
+                height: 24px;
+                border-radius: 50%;
+                background: var(--green-bg);
+                border: 1px solid var(--green-border);
+                color: var(--green);
+                font-size: 11px;
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+                margin-top: 1px;
+            }
+
+            .flow-content .label {
+                font-size: 13px;
+                font-weight: 500;
+                color: var(--text);
+                font-family: var(--mono);
+                margin-bottom: 2px;
+            }
+
+            .flow-content .desc {
+                font-size: 12px;
+                color: var(--text2);
+                line-height: 1.5;
+            }
+
+            .nav {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-top: 1.5rem;
+                padding-top: 1rem;
+                border-top: 1px solid var(--border);
+            }
+
+            .nav button {
+                padding: 9px 20px;
+                font-size: 13px;
+                font-family: var(--sans);
+                font-weight: 500;
+                border-radius: var(--radius);
+                border: 1px solid var(--border2);
+                background: transparent;
+                color: var(--text2);
+                cursor: pointer;
+                transition: all 0.15s;
+            }
+
+            .nav button:hover {
+                background: var(--bg3);
+                color: var(--text);
+            }
+            .nav button.primary {
+                background: var(--blue-bg);
+                color: var(--blue);
+                border-color: var(--blue-border);
+            }
+            .nav button.primary:hover {
+                background: rgba(79, 142, 247, 0.18);
+            }
+            .nav button.success {
+                background: var(--green-bg);
+                color: var(--green);
+                border-color: var(--green-border);
+            }
+
+            .counter {
+                font-size: 12px;
+                color: var(--text3);
+                font-family: var(--mono);
+            }
+
+            code {
+                font-family: var(--mono);
+                font-size: 12px;
+                color: var(--amber);
+                background: rgba(251, 191, 36, 0.08);
+                padding: 1px 5px;
+                border-radius: 4px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="page">
+            <header>
+                <h1>MySQL Master/Replica — arquitetura de 10 passos</h1>
+                <p>Guia de implementação da separação entre leitura e escrita no posts-app usando dois containers Docker independentes.</p>
+            </header>
+
+            <div class="progress-bar"><div class="progress-fill" id="progress" style="width: 10%"></div></div>
+
+            <div class="step-nav" id="nav"></div>
+
+            <!-- PASSO 1 -->
+            <div class="panel active" id="p0">
+                <div class="card">
+                    <div class="card-head"><span class="badge badge-blue">infraestrutura</span><span class="card-title">Passo 1 — configuração do MySQL</span></div>
+                    <div class="card-sub">
+                        Você cria a pasta <code>mysql/</code> com dois arquivos <code>.cnf</code> — um ensina o MySQL a ser Master, outro a ser Replica. Sem esses arquivos, os dois containers seriam
+                        MySQL genéricos sem identidade na replicação.
+                    </div>
+                    <div class="file-row"><span class="fname">mysql/master.cnf</span><span class="fdesc">→ ativa binary log, define server-id = 1, habilita replicação de escrita</span></div>
+                    <div class="file-row"><span class="fname">mysql/replica.cnf</span><span class="fdesc">→ ativa relay log, define server-id = 2, read_only = ON</span></div>
+                    <div class="divider"></div>
+                    <div class="insight">
+                        O <code>server-id</code> é como o identificador único do servidor na topologia de replicação. Se dois tiverem o mesmo, o MySQL rejeita a conexão. O Master usa 1 por convenção
+                        universal — a Replica usa 2, 3, 4... para múltiplas réplicas.
+                    </div>
+                </div>
+            </div>
+
+            <!-- PASSO 2 -->
+            <div class="panel" id="p1">
+                <div class="card">
+                    <div class="card-head"><span class="badge badge-amber">configuração</span><span class="card-title">Passo 2 — atualizar o .env</span></div>
+                    <div class="card-sub">
+                        O <code>.env</code> agora tem dois hosts de banco em vez de um. Cada pool do Node.js vai apontar para um hostname diferente — Master para escrita, Replica para leitura.
+                    </div>
+                    <div class="file-row"><span class="fname">DB_HOST_MASTER</span><span class="fdesc">= mysql_master → recebe INSERT, UPDATE, DELETE</span></div>
+                    <div class="file-row"><span class="fname">DB_HOST_REPLICA</span><span class="fdesc">= mysql_replica → recebe SELECT do feed e perfil</span></div>
+                    <div class="file-row"><span class="fname">REPLICATION_USER</span><span class="fdesc">= usuário com privilégio exclusivo REPLICATION SLAVE</span></div>
+                    <div class="file-row"><span class="fname">REPLICATION_PASSWORD</span><span class="fdesc">= senha do usuário de replicação — vem do .env</span></div>
+                    <div class="divider"></div>
+                    <div class="insight">
+                        O <code>.env.example</code> sobe pro GitHub com os nomes das variáveis — sem os valores reais. É o mapa das variáveis sem os segredos. Qualquer dev que clonar o projeto sabe
+                        quais variáveis precisa configurar.
+                    </div>
+                </div>
+            </div>
+
+            <!-- PASSO 3 -->
+            <div class="panel" id="p2">
+                <div class="card">
+                    <div class="card-head"><span class="badge badge-blue">script</span><span class="card-title">Passo 3 — setup-replication.js</span></div>
+                    <div class="card-sub">
+                        Script Node.js em <code>src/scripts/</code> que roda uma única vez para configurar a replicação. Cria o usuário de replicação no Master e aponta a Replica para o Master.
+                    </div>
+                    <div class="arrow-row">
+                        <div class="abox">conecta no Master (root)</div>
+                        <span class="arr">→</span>
+                        <div class="abox">cria usuário replicador</div>
+                        <span class="arr">→</span>
+                        <div class="abox">lê posição do binary log</div>
+                    </div>
+                    <div class="arrow-row">
+                        <div class="abox">conecta na Replica</div>
+                        <span class="arr">→</span>
+                        <div class="abox">aponta pro Master (CHANGE REPLICATION SOURCE)</div>
+                        <span class="arr">→</span>
+                        <div class="abox">START REPLICA</div>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="insight">
+                        É idempotente — se a Replica já estiver rodando com <code>Slave_IO_Running = Yes</code>, o script detecta e encerra sem fazer nada. Pode rodar toda vez que o container sobe sem
+                        causar problema.
+                    </div>
+                </div>
+            </div>
+
+            <!-- PASSO 4 -->
+            <div class="panel" id="p3">
+                <div class="card">
+                    <div class="card-head"><span class="badge badge-green">orquestração</span><span class="card-title">Passo 4 — docker-compose.yml BASE</span></div>
+                    <div class="card-sub">O arquivo base agora orquestra três serviços em vez de dois. O Node.js só sobe depois que ambos os bancos passaram no healthcheck.</div>
+                    <div class="file-row"><span class="fname">app_posts</span><span class="fdesc">→ depends_on: mysql_master E mysql_replica (condition: service_healthy)</span></div>
+                    <div class="file-row"><span class="fname">mysql_master</span><span class="fdesc">→ volume mysql_master_data + master.cnf montado como :ro</span></div>
+                    <div class="file-row"><span class="fname">mysql_replica</span><span class="fdesc">→ volume mysql_replica_data + replica.cnf montado como :ro</span></div>
+                    <div class="divider"></div>
+                    <div class="insight">
+                        Dois volumes completamente separados — os dados nunca compartilham disco. A sincronização acontece só via rede pelo protocolo de replicação nativa do MySQL (binary log → relay
+                        log). O <code>:ro</code> nos arquivos <code>.cnf</code> garante que o container não pode modificar sua própria configuração em runtime.
+                    </div>
+                </div>
+            </div>
+
+            <!-- PASSO 5 -->
+            <div class="panel" id="p4">
+                <div class="card">
+                    <div class="card-head"><span class="badge badge-green">orquestração</span><span class="card-title">Passo 5 — docker-compose.override.yml DEV</span></div>
+                    <div class="card-sub">Em desenvolvimento, o <code>command</code> sobrescreve o CMD do Dockerfile e executa três etapas em sequência antes do servidor subir.</div>
+                    <div class="arrow-row">
+                        <div class="abox">setup-replication.js</div>
+                        <span class="arr">&&</span>
+                        <div class="abox">migrate.js</div>
+                        <span class="arr">&&</span>
+                        <div class="abox">npx nodemon server.js</div>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="insight">
+                        O <code>&&</code> entre os comandos garante que cada etapa precisa ter sucesso (exit code 0) antes da próxima começar. Se a replicação falhar, o migrate não roda. Se o migrate
+                        falhar, o servidor não sobe. É a sequência de segurança que o Reddit usa antes de qualquer deploy — nunca sobe código em banco inconsistente.
+                    </div>
+                </div>
+            </div>
+
+            <!-- PASSO 6 -->
+            <div class="panel" id="p5">
+                <div class="card">
+                    <div class="card-head"><span class="badge badge-green">orquestração</span><span class="card-title">Passo 6 — docker-compose.prod.yml PRODUÇÃO</span></div>
+                    <div class="card-sub">
+                        Em produção, sem <code>command</code> no Compose — o CMD do Dockerfile é quem executa a sequência. Sem volumes de código fonte — a imagem é autossuficiente e imutável.
+                    </div>
+                    <div class="file-row"><span class="fname">NODE_ENV = production</span><span class="fdesc">→ logs mínimos, performance máxima, sem erros detalhados expostos</span></div>
+                    <div class="file-row"><span class="fname">sem volumes de código</span><span class="fdesc">→ COPY . . no Dockerfile já empacotou tudo dentro da imagem</span></div>
+                    <div class="divider"></div>
+                    <div class="insight">
+                        Princípio de imutabilidade — a imagem carrega tudo dentro. Qualquer container recriado da mesma imagem é idêntico ao anterior. É o que o Facebook chama de "infrastructure as
+                        immutable artifact" — você não edita o servidor, você substitui a imagem.
+                    </div>
+                </div>
+            </div>
+
+            <!-- PASSO 7 -->
+            <div class="panel" id="p6">
+                <div class="card">
+                    <div class="card-head"><span class="badge badge-blue">receita</span><span class="card-title">Passo 7 — Dockerfile</span></div>
+                    <div class="card-sub">
+                        O CMD do Dockerfile agora executa três etapas em sequência para produção. Em desenvolvimento, o <code>command</code> do override.yml substitui completamente esse CMD.
+                    </div>
+                    <div class="arrow-row">
+                        <div class="abox">node src/scripts/setup-replication.js</div>
+                        <span class="arr">&&</span>
+                        <div class="abox">node src/scripts/migrate.js</div>
+                        <span class="arr">&&</span>
+                        <div class="abox">node server.js</div>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="insight">
+                        O BuildKit cache mount <code>--mount=type=cache,target=/root/.npm</code> no <code>RUN npm install</code> persiste o cache do npm entre builds. Quando o
+                        <code>package.json</code> muda, o npm encontra os pacotes anteriores e instala só o que é novo — de ~40s para ~5s por deploy.
+                    </div>
+                </div>
+            </div>
+
+            <!-- PASSO 8 -->
+            <div class="panel" id="p7">
+                <div class="card">
+                    <div class="card-head"><span class="badge badge-blue">código</span><span class="card-title">Passo 8 — database.js</span></div>
+                    <div class="card-sub">
+                        O coração da separação Master/Replica no Node.js. Dois pools — um aponta para o Master, outro para a Replica. O código de negócio só chama <code>poolEscrita</code> ou
+                        <code>poolLeitura</code>.
+                    </div>
+                    <div class="file-row"><span class="fname">poolEscrita</span><span class="fdesc">→ mysql_master | connectionLimit: 5 | 10% do tráfego (INSERT, UPDATE, DELETE)</span></div>
+                    <div class="file-row"><span class="fname">poolLeitura</span><span class="fdesc">→ mysql_replica | connectionLimit: 20 | 90% do tráfego (SELECT do feed e perfil)</span></div>
+                    <div class="divider"></div>
+                    <div class="insight">
+                        O limite de conexões é assimétrico por design. Leitura tem mais conexões porque é 90% do tráfego. Mais conexões no Master = mais contenção de locks nas escritas = mais
+                        lentidão. O Reddit usa até 100 conexões por Replica em horário de pico — e apenas 5 a 10 no Master.
+                    </div>
+                </div>
+            </div>
+
+            <!-- PASSO 9 -->
+            <div class="panel" id="p8">
+                <div class="card">
+                    <div class="card-head"><span class="badge badge-blue">script</span><span class="card-title">Passo 9 — migrate.js</span></div>
+                    <div class="card-sub">
+                        O migrate.js agora conecta explicitamente no Master via <code>DB_HOST_MASTER</code>. Migrations são operações de escrita — <code>CREATE TABLE</code>, <code>INSERT</code>,
+                        <code>ALTER</code>. A Replica recebe essas mudanças automaticamente via replicação.
+                    </div>
+                    <div class="file-row"><span class="fname">host: process.env.DB_HOST_MASTER</span><span class="fdesc">→ sempre o Master — nunca a Replica</span></div>
+                    <div class="divider"></div>
+                    <div class="insight">
+                        Se conectasse na Replica, o <code>read_only = ON</code> bloquearia todos os <code>CREATE TABLE</code> e <code>INSERT</code> com erro
+                        <code>ERROR 1290: The MySQL server is running with the --read-only option</code>. Isso causaria falha imediata na inicialização — o servidor nunca subiria.
+                    </div>
+                </div>
+            </div>
+
+            <!-- PASSO 10 -->
+            <div class="panel" id="p9">
+                <div class="card">
+                    <div class="card-head"><span class="badge badge-gray">exclusão</span><span class="card-title">Passo 10 — .dockerignore</span></div>
+                    <div class="card-sub">
+                        A pasta <code>mysql/</code> com os arquivos <code>.cnf</code> é configuração de infraestrutura — não pertence dentro da imagem Docker. O servidor Node.js não precisa saber como
+                        o MySQL foi configurado.
+                    </div>
+                    <div class="file-row"><span class="fname">mysql/</span><span class="fdesc">→ adicionado ao .dockerignore — não entra na imagem Node.js</span></div>
+                    <div class="divider"></div>
+                    <div class="insight">
+                        Os arquivos <code>.cnf</code> são montados via volume diretamente no container MySQL pelo docker-compose.yml — não precisam estar dentro da imagem Node.js. Imagem menor =
+                        contexto de build menor = daemon recebe menos dados = build mais rápido.
+                    </div>
+                </div>
+                <div class="flow-complete">
+                    <div style="font-size: 13px; font-weight: 600; color: var(--green); margin-bottom: 1rem; letter-spacing: -0.01em">Fluxo completo de inicialização</div>
+                    <div class="flow-step">
+                        <div class="flow-num">1</div>
+                        <div class="flow-content">
+                            <div class="label">docker compose up --build -d</div>
+                            <div class="desc">Docker lê base + override automaticamente</div>
+                        </div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="flow-num">2</div>
+                        <div class="flow-content">
+                            <div class="label">mysql_master sobe → healthcheck passa</div>
+                            <div class="desc">binary log ativo, aguardando eventos de escrita</div>
+                        </div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="flow-num">3</div>
+                        <div class="flow-content">
+                            <div class="label">mysql_replica sobe → healthcheck passa</div>
+                            <div class="desc">read_only ativo, aguardando conexão do Master</div>
+                        </div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="flow-num">4</div>
+                        <div class="flow-content">
+                            <div class="label">setup-replication.js executa</div>
+                            <div class="desc">cria usuário replicador, aponta Replica pro Master, START REPLICA</div>
+                        </div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="flow-num">5</div>
+                        <div class="flow-content">
+                            <div class="label">migrate.js executa no Master</div>
+                            <div class="desc">cria tabelas → Replica recebe via binary log automaticamente</div>
+                        </div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="flow-num">6</div>
+                        <div class="flow-content">
+                            <div class="label">nodemon server.js inicia</div>
+                            <div class="desc">poolEscrita → mysql_master | poolLeitura → mysql_replica | localhost:3000</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav">
+                <button onclick="prev()" id="btn-prev" style="visibility: hidden">← Anterior</button>
+                <span class="counter" id="counter">1 / 10</span>
+                <button onclick="next()" id="btn-next" class="primary">Próximo →</button>
+            </div>
+        </div>
+
+        <script>
+            const total = 10;
+            const labels = [
+                "1. MySQL cnf",
+                "2. .env",
+                "3. setup-replication",
+                "4. compose base",
+                "5. compose dev",
+                "6. compose prod",
+                "7. Dockerfile",
+                "8. database.js",
+                "9. migrate.js",
+                "10. dockerignore",
+            ];
+
+            let cur = 0;
+            const done = new Set();
+            const nav = document.getElementById("nav");
+
+            labels.forEach((l, i) => {
+                const b = document.createElement("button");
+                b.className = "s-btn" + (i === 0 ? " active" : "");
+                b.textContent = l;
+                b.id = "sb" + i;
+                b.onclick = () => go(i);
+                nav.appendChild(b);
+            });
+
+            function go(i) {
+                done.add(cur);
+                document.querySelectorAll(".panel").forEach((p, j) => p.classList.toggle("active", j === i));
+                document.querySelectorAll(".s-btn").forEach((b, j) => {
+                    b.classList.remove("active", "done");
+                    if (j === i) b.classList.add("active");
+                    else if (done.has(j)) b.classList.add("done");
+                });
+                cur = i;
+                document.getElementById("counter").textContent = i + 1 + " / " + total;
+                document.getElementById("progress").style.width = ((i + 1) / total) * 100 + "%";
+                document.getElementById("btn-prev").style.visibility = i === 0 ? "hidden" : "visible";
+                const nb = document.getElementById("btn-next");
+                nb.textContent = i === total - 1 ? "Concluído ✓" : "Próximo →";
+                nb.className = i === total - 1 ? "success" : "primary";
+            }
+
+            function next() {
+                if (cur < total - 1) go(cur + 1);
+            }
+            function prev() {
+                if (cur > 0) go(cur - 1);
+            }
+
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "ArrowRight") next();
+                if (e.key === "ArrowLeft") prev();
+            });
+        </script>
+    </body>
+</html>
