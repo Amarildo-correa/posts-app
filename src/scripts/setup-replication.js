@@ -70,7 +70,7 @@ async function configurarReplicacao() {
     await new Promise((r) => setTimeout(r, 2000));
 
     const [statusFinal] = await replica.query("SHOW REPLICA STATUS");
-    if (statusFinal[0].Slave_IO_Running === "Yes" && statusFinal[0].Slave_SQL_Running === "Yes") {
+    if (statusFinal[0].Replica_IO_Running === "Yes" && statusFinal[0].Replica_SQL_Running === "Yes") {
         console.log("[replicacao] replicação funcionando via SSL");
     } else {
         console.error("[replicacao] ERRO na replicação");

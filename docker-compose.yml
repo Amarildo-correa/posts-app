@@ -20,6 +20,11 @@ services:
             DB_USER: ${DB_USER}
             DB_PASSWORD: ${DB_PASSWORD}
             DB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+        depends_on:
+            mysql_master:
+                condition: service_healthy
+            mysql_replica:
+                condition: service_healthy    
 
     # ── SERVIÇO MYSQL MASTER (CUSTÓDIA DA ESCRITA) ────────────
     mysql_master:
