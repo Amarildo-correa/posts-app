@@ -1,11 +1,17 @@
 # docker-compose.yml
 # ─────────────────────────────────────────────────────────────
-# BASE — Configuração central de infraestrutura (Zero Trust)
+# BASE — Configuração central de infraestrutura
 # Arquitetura: Node.js + MySQL Master (Escrita) + MySQL Replica (Leitura)
+# ─────────────────────────────────────────────────────────────
+# NOTA DE ARQUITETURA — Certs TLS por ambiente
+# Em desenvolvimento (Windows): MySQL auto-gera certs via --require-secure-transport=ON
+# O OpenSSL recusa chaves privadas com permissão 777 (padrão de bind mounts no Windows)
+# Em produção (Vultr/Linux): docker-compose.prod.yml monta os certs reais de mysql/certs/
+# O Linux preserva permissões 600 nos arquivos — OpenSSL aceita normalmente
 # ─────────────────────────────────────────────────────────────
 
 services:
-    # ── SERVIÇO NODE.JS (O MOTOR DO COMENTAAÊ) ────────────────
+    # ── SERVIÇO NODE.JS ────────────────────────────────────────
     app_posts:
         build:
             context: .
@@ -20,13 +26,14 @@ services:
             DB_USER: ${DB_USER}
             DB_PASSWORD: ${DB_PASSWORD}
             DB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+        # app_posts só sobe depois que Master e Replica passaram no healthcheck
         depends_on:
             mysql_master:
                 condition: service_healthy
             mysql_replica:
-                condition: service_healthy    
+                condition: service_healthy
 
-    # ── SERVIÇO MYSQL MASTER (CUSTÓDIA DA ESCRITA) ────────────
+    # ── SERVIÇO MYSQL MASTER ───────────────────────────────────
     mysql_master:
         image: mysql:8.0
         container_name: mysql_master
@@ -39,13 +46,17 @@ services:
         expose:
             - "3306"
         volumes:
+            # disco persistente — dados sobrevivem a docker compose down
             - posts-app_mysql_master_data:/var/lib/mysql
-        # ── INJEÇÃO DE CONFIGURAÇÃO + AUTO-SSL ──
+            # SEM montagem de certs aqui — MySQL auto-gera em desenvolvimento
+            # Em produção o docker-compose.prod.yml adiciona os certs reais via override
         command:
             - --server-id=1
             - --log-bin=mysql-bin
             - --binlog-format=ROW
             - --binlog-expire-logs-seconds=604800
+            # --require-secure-transport=ON ativa TLS com certs autogerados em dev
+            # Em produção o override adiciona --ssl-ca, --ssl-cert, --ssl-key
             - --require-secure-transport=ON
         healthcheck:
             test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
@@ -53,7 +64,7 @@ services:
             timeout: 10s
             retries: 10
 
-    # ── SERVIÇO MYSQL REPLICA (ESCALABILIDADE DE LEITURA) ─────
+    # ── SERVIÇO MYSQL REPLICA ──────────────────────────────────
     mysql_replica:
         image: mysql:8.0
         container_name: mysql_replica
@@ -66,8 +77,8 @@ services:
         expose:
             - "3306"
         volumes:
+            # disco exclusivo da Replica
             - posts-app_mysql_replica_data:/var/lib/mysql
-        # ── INJEÇÃO DE CONFIGURAÇÃO + AUTO-SSL ──
         command:
             - --server-id=2
             - --relay-log=mysql-relay-bin
