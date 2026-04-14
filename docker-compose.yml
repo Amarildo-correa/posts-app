@@ -37,6 +37,7 @@ services:
             DB_NAME: ${DB_NAME} # nome do banco de dados
             DB_USER: ${DB_USER} # usuário do banco
             DB_PASSWORD: ${DB_PASSWORD} # senha do banco — vem do .env
+            DB_ROOT_PASSWORD:     ${DB_ROOT_PASSWORD} 
             SESSION_SECRET: ${SESSION_SECRET} # chave de assinatura das sessões
             REPLICATION_USER: ${REPLICATION_USER}
             REPLICATION_PASSWORD: ${REPLICATION_PASSWORD}

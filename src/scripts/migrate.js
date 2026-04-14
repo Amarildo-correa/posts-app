@@ -26,13 +26,6 @@ import { fileURLToPath } from "url";
 // permite usar await nas queries — código legível e sem callback hell
 import mysql from "mysql2/promise";
 
-// dotenv/config — importa e configura em uma linha — padrão ES Modules
-// equivalente ao require('dotenv').config() do CommonJS
-// injeta as variáveis do .env no process.env automaticamente
-// necessário porque esse script roda antes do server.js
-// sem isso process.env.DB_HOST seria undefined
-import "dotenv/config";
-
 // ─────────────────────────────────────────────────────────────
 // RECRIA __dirname — não existe nativamente em ES Modules
 // import.meta.url retorna a URL do arquivo atual
