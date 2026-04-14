@@ -1,99 +1,54 @@
 # docker-compose.yml
 # ─────────────────────────────────────────────────────────────
-# BASE — configuração comum a todos os ambientes
-# Arquitetura Master/Replica — dois containers MySQL isolados
-# Master: escrita | Replica: leitura
-# Sincronização via replicação nativa MySQL — nunca filesystem
+# BASE — Configuração central de infraestrutura (Zero Trust)
+# Arquitetura: Node.js + MySQL Master (Escrita) + MySQL Replica (Leitura)
 # ─────────────────────────────────────────────────────────────
 
 services:
-    # ── SERVIÇO NODE.JS ───────────────────────────────────────
+    # ── SERVIÇO NODE.JS (O MOTOR DO COMENTAAÊ) ────────────────
     app_posts:
-        # instrui o Compose a buildar usando o Dockerfile (Dockerfile)
-        # context: . define a raiz do projeto como contexto do build
-        # dockerfile: aponta explicitamente pro arquivo de receita
         build:
             context: .
             dockerfile: Dockerfile
-
-        # nome fixo do container — fácil identificar no docker ps (terminal)
         container_name: app_posts
-
-        # reinicia automaticamente em qualquer falha de processo ou servidor
-        # unless-stopped: não reinicia se você parou com docker compose down (terminal)
-        # é o padrão de resiliência que o Instagram usa em todos os serviços críticos
         restart: unless-stopped
-
-        # variáveis comuns a todos os ambientes
-        # DB_HOST aponta pro hostname interno Docker — igual em dev e produção
-        # o Node.js resolve "mysql_posts" pela rede interna Docker automaticamente
         environment:
-            # dois hosts separados — Master pra escrita, Replica pra leitura
-            # o Node.js nunca usa IP — sempre hostname interno Docker
-            # em produção no Vultr: troca os hostnames pelos IPs dos servidores
-            DB_HOST_MASTER: mysql_master # INSERT, UPDATE, DELETE
-            DB_HOST_REPLICA: mysql_replica # SELECT do feed, perfil, busca
-            DB_PORT: ${DB_PORT} # porta interna do MySQL
-            DB_NAME: ${DB_NAME} # nome do banco de dados
-            DB_USER: ${DB_USER} # usuário do banco
-            DB_PASSWORD: ${DB_PASSWORD} # senha do banco — vem do .env
-            DB_ROOT_PASSWORD:     ${DB_ROOT_PASSWORD} 
-            SESSION_SECRET: ${SESSION_SECRET} # chave de assinatura das sessões
-            REPLICATION_USER: ${REPLICATION_USER}
-            REPLICATION_PASSWORD: ${REPLICATION_PASSWORD}
+            DB_HOST_MASTER: mysql_master
+            DB_HOST_REPLICA: mysql_replica
+            DB_PORT: 3306
+            DB_NAME: ${DB_NAME}
+            DB_USER: ${DB_USER}
+            DB_PASSWORD: ${DB_PASSWORD}
+            DB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
 
-        # Node.js só sobe depois que AMBOS os bancos estão saudáveis
-        # sem isso o migrate.js tentaria conectar em bancos ainda inicializando
-        # é o "readiness gate" — o Facebook usa isso em todos os serviços críticos
-        depends_on:
-            mysql_master:
-                condition: service_healthy
-            mysql_replica:
-                condition: service_healthy
-
-    # ── MYSQL MASTER — escrita ────────────────────────────────
+    # ── SERVIÇO MYSQL MASTER (CUSTÓDIA DA ESCRITA) ────────────
     mysql_master:
-        # imagem oficial do MySQL 8.0 do Docker Hub
-        # versão fixada — NUNCA usar "latest" em produção
-        # "latest" pode mudar silenciosamente e quebrar o banco
-        # é o mesmo padrão que o Reddit usa — versão explícita sempre
         image: mysql:8.0
         container_name: mysql_master
         restart: unless-stopped
-
-        # variáveis que o MySQL lê na primeira inicialização
-        # cria o banco e o usuário automaticamente — zero SQL manual
         environment:
-            MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD} # senha do root — nunca exposta
-            MYSQL_DATABASE: ${DB_NAME} # cria o banco automaticamente
-            MYSQL_USER: ${DB_USER} # cria o usuário automaticamente
-            MYSQL_PASSWORD: ${DB_PASSWORD} # senha do usuário
-
-        # NUNCA ports: no MySQL — jamais expõe o banco pra internet
-        # expose: só acessível dentro da rede Docker interna
+            MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+            MYSQL_DATABASE: ${DB_NAME}
+            MYSQL_USER: ${DB_USER}
+            MYSQL_PASSWORD: ${DB_PASSWORD}
         expose:
             - "3306"
-
-        # volume persistente — dados do MySQL sobrevivem ao restart do container
-        # sem esse volume todos os registros somem quando o container para
-        # é o equivalente ao disco rígido do banco — separado do ciclo do container
         volumes:
-            # volume exclusivo do Master — dados de escrita isolados
-            # se a Replica cair, o Master continua operando normalmente
-            - mysql_master_data:/var/lib/mysql
-
-            # configuração que habilita binary log e define server-id = 1
-            # :ro = read-only — container não pode modificar o arquivo
-            # é o mesmo princípio de configuração imutável que o Reddit usa
-            - ./mysql/master.cnf:/etc/mysql/conf.d/master.cnf:ro
-
+            - posts-app_mysql_master_data:/var/lib/mysql
+        # ── INJEÇÃO DE CONFIGURAÇÃO + AUTO-SSL ──
+        command:
+            - --server-id=1
+            - --log-bin=mysql-bin
+            - --binlog-format=ROW
+            - --binlog-expire-logs-seconds=604800
+            - --require-secure-transport=ON
         healthcheck:
             test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
             interval: 5s
             timeout: 10s
             retries: 10
 
-    # ── MYSQL REPLICA — leitura ───────────────────────────────
+    # ── SERVIÇO MYSQL REPLICA (ESCALABILIDADE DE LEITURA) ─────
     mysql_replica:
         image: mysql:8.0
         container_name: mysql_replica
@@ -103,34 +58,26 @@ services:
             MYSQL_DATABASE: ${DB_NAME}
             MYSQL_USER: ${DB_USER}
             MYSQL_PASSWORD: ${DB_PASSWORD}
-
         expose:
             - "3306"
-
         volumes:
-            # volume exclusivo da Replica — completamente isolado do Master
-            # dados chegam via relay log — nunca via disco compartilhado
-            - mysql_replica_data:/var/lib/mysql
-
-            # configuração que define server-id = 2 e habilita read_only
-            - ./mysql/replica.cnf:/etc/mysql/conf.d/replica.cnf:ro
-
-        # Replica só sobe depois que o Master está saudável
-        # sem o Master rodando, a Replica não tem de onde sincronizar
+            - posts-app_mysql_replica_data:/var/lib/mysql
+        # ── INJEÇÃO DE CONFIGURAÇÃO + AUTO-SSL ──
+        command:
+            - --server-id=2
+            - --relay-log=mysql-relay-bin
+            - --read-only=ON
+            - --require-secure-transport=ON
         depends_on:
             mysql_master:
                 condition: service_healthy
-
         healthcheck:
             test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
             interval: 5s
             timeout: 10s
             retries: 10
 
-# ── VOLUMES PERSISTENTES ──────────────────────────────────
-# dois volumes independentes — Master e Replica têm seus próprios discos
-# sobrevivem ao docker compose down (terminal)
-# só removidos com docker compose down -v (terminal)
+# ── PERSISTÊNCIA DE LONGO PRAZO ───────────────────────────
 volumes:
-    mysql_master_data: # disco exclusivo do Master
-    mysql_replica_data: # disco exclusivo da Replica
+    posts-app_mysql_master_data:
+    posts-app_mysql_replica_data:

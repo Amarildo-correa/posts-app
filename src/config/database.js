@@ -8,6 +8,13 @@
 
 import mysql from "mysql2/promise";
 
+// ── CONFIGURAÇÃO SSL (TLS Padrão) ─────────────────────────────
+// rejectUnauthorized: false -> Cria o túnel criptografado seguro,
+// mas não tenta validar a cadeia de certificados autoassinados nem envia cert de cliente.
+const sslConfig = {
+    rejectUnauthorized: false,
+};
+
 // ── POOL DE ESCRITA → mysql_master ────────────────────────────
 // recebe INSERT, UPDATE, DELETE — operações que modificam dados
 // connectionLimit menor — escrita é 10% do tráfego
@@ -18,6 +25,7 @@ const poolEscrita = mysql.createPool({
     database: process.env.DB_NAME,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
+    ssl: sslConfig, // Didática: Ativa encriptação total para o tráfego de escrita
 
     // 5 conexões simultâneas de escrita — suficiente pra 90% dos casos
     // escritas são sequenciais por design — raramente precisam de paralelismo
@@ -38,11 +46,10 @@ const poolLeitura = mysql.createPool({
     database: process.env.DB_NAME,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
+    ssl: sslConfig, // Didática: Ativa encriptação total para o tráfego de leitura
 
-    // 20 conexões simultâneas de leitura — feed, perfil, busca em paralelo
-    // o Reddit usa até 100 conexões por Replica em horário de pico
+    // 20 conexões simultâneas — o feed do Comentaaê escala aqui
     connectionLimit: 20,
-
     waitForConnections: true,
     queueLimit: 0,
 });

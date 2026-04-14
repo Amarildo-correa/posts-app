@@ -1,31 +1,33 @@
-# mysql/replica.cnf
 # ─────────────────────────────────────────────────────────────
-# Configuração do MySQL Replica — recebe leitura
-# Montado em /etc/mysql/conf.d/ dentro do container mysql_replica
+# CONFIGURAÇÃO REPLICA - O NÓ DE LEITURA (READER)
+# ─────────────────────────────────────────────────────────────
+# Didática: A Réplica serve para escalar o Comentaaê. Se o feed
+# tiver 1 milhão de acessos, as buscas vão para cá, deixando o
+# Master livre para processar apenas as novas postagens.
 # ─────────────────────────────────────────────────────────────
 
 [mysqld]
-
-# ── Identidade na topologia de replicação ─────────────────────
-# server-id diferente do Master — obrigatório
-# MySQL rejeita replicação com server-id duplicado
-# convenção: Replica usa 2, 3, 4... se houver múltiplas Replicas
+# Identidade única: Deve ser diferente do Master. Usamos 2.
 server-id = 2
 
-# ── Relay log — buffer local dos eventos recebidos ────────────
-# o IO Thread salva aqui os eventos baixados do Master
-# o SQL Thread lê daqui e aplica no banco da Replica
-# dois processos separados — desacoplamento que permite replicação assíncrona
-# a Replica pode processar eventos no próprio ritmo sem bloquear o Master
+# ── Relay Log (O Buffer de Recepção) ──────────────────────────
+# Enquanto o Master tem o 'Binary Log' (saída), a Réplica tem o
+# 'Relay Log' (entrada). Ela baixa as mudanças do Master, guarda
+# aqui temporariamente e depois as aplica no banco.
 relay-log = mysql-relay-bin
 
-# ── Proteção contra escrita direta ────────────────────────────
-# bloqueia qualquer INSERT, UPDATE, DELETE direto na Replica
-# dados só podem entrar via SQL Thread (replicação)
-# se o Node.js tentar escrever na Replica por engano → erro imediato
-# é a proteção que o Instagram usa para garantir que dados vêm só do Master
+# ── Blindagem de Integridade (Read Only) ──────────────────────
+# Didática: Ativamos o modo 'Somente Leitura'. Isso impede que, por
+# erro de código, a aplicação tente salvar um post aqui.
+# Dados só entram aqui via replicação vinda do Master.
 read_only = ON
 
-# ── Escopo da replicação ──────────────────────────────────────
-# replica APENAS o banco posts_app_db — espelha o escopo do Master
-replicate_do_db = posts_app_db
+# ── SEGURANÇA DE TRANSPORTE (SSL) ──────────────────────────────
+# A Réplica também exige SSL para que o Node.js e o Master falem
+# com ela de forma segura. Utilizamos os mesmos certificados.
+# ─────────────────────────────────────────────────────────────
+
+require_secure_transport = ON
+ssl-ca = /etc/mysql/certs/ca.pem
+ssl-cert = /etc/mysql/certs/server-cert.pem
+ssl-key = /etc/mysql/certs/server-key.pem
