@@ -1,99 +1,99 @@
-# docker-compose.yml
+# docker-compose.yml - Arquivo de orquestração para ambiente de containers isolados.
 # ─────────────────────────────────────────────────────────────
-# BASE — Configuração central de infraestrutura
-# Arquitetura: Node.js + MySQL Master (Escrita) + MySQL Replica (Leitura)
+# BASE — Configuração central de infraestrutura.
+# Arquitetura: Node.js + MySQL Master (Escrita) + MySQL Replica (Leitura).
 # ─────────────────────────────────────────────────────────────
-# NOTA DE ARQUITETURA — Certs TLS por ambiente
-# Em desenvolvimento (Windows): MySQL auto-gera certs via --require-secure-transport=ON
-# O OpenSSL recusa chaves privadas com permissão 777 (padrão de bind mounts no Windows)
-# Em produção (Vultr/Linux): docker-compose.prod.yml monta os certs reais de mysql/certs/
-# O Linux preserva permissões 600 nos arquivos — OpenSSL aceita normalmente
+# NOTA DE ARQUITETURA — Certs TLS por ambiente.
+# Em desenvolvimento (Windows): MySQL auto-gera certs via --require-secure-transport=ON.
+# O OpenSSL recusa chaves privadas com permissão 777 (padrão de bind mounts no Windows).
+# Em produção (Vultr/Linux): docker-compose.prod.yml monta os certs reais de mysql/certs/.
+# O Linux preserva permissões 600 nos arquivos — OpenSSL aceita normalmente.
 # ─────────────────────────────────────────────────────────────
 
-services:
+services: # Define o início da lista de serviços (containers) que compõem a aplicação.
     # ── SERVIÇO NODE.JS ────────────────────────────────────────
-    app_posts:
-        build:
-            context: .
-            dockerfile: Dockerfile
-        container_name: app_posts
-        restart: unless-stopped
-        environment:
-            DB_HOST_MASTER: mysql_master
-            DB_HOST_REPLICA: mysql_replica
-            DB_PORT: 3306
-            DB_NAME: ${DB_NAME}
-            DB_USER: ${DB_USER}
-            DB_PASSWORD: ${DB_PASSWORD}
-            DB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    app_posts: # Nome do serviço da aplicação principal em Node.js.
+        build: # Define as instruções de construção da imagem customizada.
+            context: . # Define o diretório atual como contexto para o Docker.
+            dockerfile: Dockerfile # Aponta para o arquivo com as instruções de instalação do Node.js e dependências.
+        container_name: app_posts # Nome fixo para o container facilitando a identificação.
+        restart: unless-stopped # Reinicia o container automaticamente, exceto se for parado manualmente.
+        environment: # Bloco de variáveis de ambiente injetadas no Node.js.
+            DB_HOST_MASTER: mysql_master # Define o endpoint para operações de escrita (Insert/Update/Delete).
+            DB_HOST_REPLICA: mysql_replica # Define o endpoint para operações de leitura (Select), escalando consultas.
+            DB_PORT: 3306 # Porta padrão de comunicação com o protocolo MySQL.
+            DB_NAME: ${DB_NAME} # Nome do banco, carregado do arquivo .env por segurança.
+            DB_USER: ${DB_USER} # Usuário do banco, carregado via variável de ambiente.
+            DB_PASSWORD: ${DB_PASSWORD} # Senha do usuário, protegida via variável de ambiente.
+            DB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD} # Senha administrativa para manutenção via aplicação se necessário.
         # app_posts só sobe depois que Master e Replica passaram no healthcheck
-        depends_on:
-            mysql_master:
-                condition: service_healthy
-            mysql_replica:
-                condition: service_healthy
+        depends_on: # Estabelece ordem de inicialização baseada em dependências.
+            mysql_master: # Depende do container de escrita.
+                condition: service_healthy # Aguarda o MySQL Master estar pronto para receber conexões (healthcheck).
+            mysql_replica: # Depende do container de leitura.
+                condition: service_healthy # Aguarda a Réplica estar sincronizada e pronta.
 
     # ── SERVIÇO MYSQL MASTER ───────────────────────────────────
-    mysql_master:
-        image: mysql:8.0
-        container_name: mysql_master
-        restart: unless-stopped
-        environment:
-            MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-            MYSQL_DATABASE: ${DB_NAME}
-            MYSQL_USER: ${DB_USER}
-            MYSQL_PASSWORD: ${DB_PASSWORD}
-        expose:
-            - "3306"
-        volumes:
+    mysql_master: # Nome do serviço do banco de dados principal (Escrita).
+        image: mysql:8.0 # Utiliza a imagem oficial do MySQL na versão 8.0.
+        container_name: mysql_master # Nome fixo para o container do banco mestre.
+        restart: unless-stopped # Garante alta disponibilidade reiniciando em falhas.
+        environment: # Configurações iniciais do banco de dados.
+            MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD} # Define a senha do superusuário root.
+            MYSQL_DATABASE: ${DB_NAME} # Cria automaticamente o banco inicial no startup.
+            MYSQL_USER: ${DB_USER} # Cria um usuário comum para a aplicação utilizar.
+            MYSQL_PASSWORD: ${DB_PASSWORD} # Define a senha do usuário comum.
+        expose: # Expõe a porta internamente na rede do Docker.
+            - "3306" # Permite que outros containers acessem o MySQL nesta porta.
+        volumes: # Mapeamento de persistência de dados.
             # disco persistente — dados sobrevivem a docker compose down
-            - posts-app_mysql_master_data:/var/lib/mysql
+            - mysql_master_data:/var/lib/mysql # Mapeia o volume Docker para a pasta de dados do MySQL.
             # SEM montagem de certs aqui — MySQL auto-gera em desenvolvimento
             # Em produção o docker-compose.prod.yml adiciona os certs reais via override
-        command:
-            - --server-id=1
-            - --log-bin=mysql-bin
-            - --binlog-format=ROW
-            - --binlog-expire-logs-seconds=604800
+        command: # Sobrescreve o comando inicial para ativar recursos de replicação.
+            - --server-id=1 # Identificador único obrigatório para replicação (Master = 1).
+            - --log-bin=mysql-bin # Ativa o log binário, essencial para registrar mudanças que a réplica lerá.
+            - --binlog-format=ROW # Garante integridade replicando a mudança da linha, não apenas o comando SQL.
+            - --binlog-expire-logs-seconds=604800 # Define limpeza automática de logs após 7 dias para poupar disco.
             # --require-secure-transport=ON ativa TLS com certs autogerados em dev
             # Em produção o override adiciona --ssl-ca, --ssl-cert, --ssl-key
-            - --require-secure-transport=ON
-        healthcheck:
-            test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
-            interval: 5s
-            timeout: 10s
-            retries: 10
+            - --require-secure-transport=ON # Exige conexões criptografadas (SSL/TLS) para maior segurança.
+        healthcheck: # Monitora a saúde real do serviço, não apenas se o container está ligado.
+            test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"] # Testa se o MySQL responde ao ping.
+            interval: 5s # Executa o teste a cada 5 segundos.
+            timeout: 10s # Tempo máximo de espera pela resposta do teste.
+            retries: 10 # Número de tentativas antes de marcar o serviço como "unhealthy".
 
     # ── SERVIÇO MYSQL REPLICA ──────────────────────────────────
-    mysql_replica:
-        image: mysql:8.0
-        container_name: mysql_replica
-        restart: unless-stopped
-        environment:
-            MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-            MYSQL_DATABASE: ${DB_NAME}
-            MYSQL_USER: ${DB_USER}
-            MYSQL_PASSWORD: ${DB_PASSWORD}
-        expose:
-            - "3306"
-        volumes:
+    mysql_replica: # Nome do serviço do banco de dados secundário (Leitura).
+        image: mysql:8.0 # Utiliza a mesma versão do mestre para evitar incompatibilidades.
+        container_name: mysql_replica # Nome fixo para o container da réplica.
+        restart: unless-stopped # Reinicia automaticamente para manter a redundância.
+        environment: # Variáveis de ambiente idênticas ao mestre para espelhamento.
+            MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD} # Senha root da réplica.
+            MYSQL_DATABASE: ${DB_NAME} # Banco de dados que será replicado.
+            MYSQL_USER: ${DB_USER} # Usuário para acesso de leitura.
+            MYSQL_PASSWORD: ${DB_PASSWORD} # Senha do usuário de leitura.
+        expose: # Expõe a porta internamente para a aplicação Node.js.
+            - "3306" # Porta padrão para consultas SQL.
+        volumes: # Mapeamento de persistência exclusivo.
             # disco exclusivo da Replica
-            - posts-app_mysql_replica_data:/var/lib/mysql
-        command:
-            - --server-id=2
-            - --relay-log=mysql-relay-bin
-            - --read-only=ON
-            - --require-secure-transport=ON
-        depends_on:
-            mysql_master:
-                condition: service_healthy
-        healthcheck:
-            test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
-            interval: 5s
-            timeout: 10s
-            retries: 10
+            - mysql_replica_data:/var/lib/mysql # Dados da réplica ficam em volume separado do mestre.
+        command: # Configurações específicas para o comportamento de réplica.
+            - --server-id=2 # Identificador único (deve ser diferente do Master).
+            - --relay-log=mysql-relay-bin # Ativa o log de retransmissão para processar dados vindos do Master.
+            - --read-only=ON # Bloqueia escritas nesta instância, forçando o uso apenas para consultas (Select).
+            - --require-secure-transport=ON # Exige TLS também na réplica para padronização de segurança.
+        depends_on: # A réplica depende logicamente da existência do mestre.
+            mysql_master: # Referência ao serviço mestre.
+                condition: service_healthy # Só inicia a réplica quando o mestre estiver totalmente operacional.
+        healthcheck: # Monitora se a réplica está respondendo corretamente.
+            test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"] # Valida conexão local.
+            interval: 5s # Intervalo entre checagens.
+            timeout: 10s # Tempo de timeout da checagem.
+            retries: 10 # Tentativas antes de falha.
 
 # ── PERSISTÊNCIA DE LONGO PRAZO ───────────────────────────
-volumes:
-    posts-app_mysql_master_data:
-    posts-app_mysql_replica_data:
+volumes: # Declaração dos volumes nomeados gerenciados pelo Docker.
+    mysql_master_data: # Volume que armazena os dados oficiais e permanentes do banco mestre.
+    mysql_replica_data: # Volume que armazena os dados espelhados da réplica.

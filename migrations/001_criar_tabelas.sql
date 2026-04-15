@@ -41,3 +41,14 @@ CREATE TABLE posts (
     FULLTEXT KEY ft_busca (titulo, texto),
     FOREIGN KEY (fk_usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE
 );
+
+CREATE TABLE estatisticas_site (
+    id             INT UNSIGNED  NOT NULL DEFAULT 1,
+    total_usuarios INT UNSIGNED  NOT NULL DEFAULT 0,
+    total_posts    INT UNSIGNED  NOT NULL DEFAULT 0,
+    atualizado_em  DATETIME      NOT NULL DEFAULT NOW() ON UPDATE NOW(),
+    PRIMARY KEY    (id),
+    CONSTRAINT     chk_unico CHECK (id = 1)
+);
+
+INSERT IGNORE INTO estatisticas_site (id) VALUES (1);

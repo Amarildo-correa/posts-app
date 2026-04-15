@@ -33,7 +33,7 @@ services:
     mysql_master:
         volumes:
             # disco persistente — igual ao base
-            - posts-app_mysql_master_data:/var/lib/mysql
+            - mysql_master_data:/var/lib/mysql
             # certs reais — funcionam no Linux com permissões 600
             # o Vultr preserva permissões Unix — OpenSSL aceita normalmente
             - ./mysql/certs:/etc/mysql/certs:ro
@@ -53,7 +53,7 @@ services:
 
     mysql_replica:
         volumes:
-            - posts-app_mysql_replica_data:/var/lib/mysql
+            - mysql_replica_data:/var/lib/mysql
             # mesmos certs — a CA é a mesma para toda a rede interna
             - ./mysql/certs:/etc/mysql/certs:ro
         command:
