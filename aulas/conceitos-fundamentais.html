@@ -1,0 +1,515 @@
+<h2 class="sr-only">Quiz técnico progressivo sobre a arquitetura do projeto posts-app</h2>
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+    body {
+        font-family: var(--font-sans);
+        color: var(--color-text-primary);
+        padding: 0;
+    }
+    .wrap {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 1.5rem 1rem 3rem;
+    }
+    .header {
+        margin-bottom: 1.5rem;
+    }
+    .title {
+        font-size: 18px;
+        font-weight: 500;
+        margin-bottom: 4px;
+    }
+    .meta {
+        font-size: 13px;
+        color: var(--color-text-secondary);
+    }
+    .prog-bar {
+        height: 3px;
+        background: var(--color-border-tertiary);
+        border-radius: 99px;
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+    }
+    .prog-fill {
+        height: 100%;
+        background: var(--color-text-info);
+        border-radius: 99px;
+        transition: width 0.4s ease;
+    }
+    .badge {
+        display: inline-block;
+        font-size: 11px;
+        padding: 2px 8px;
+        border-radius: var(--border-radius-md);
+        font-weight: 500;
+        margin-bottom: 0.75rem;
+    }
+    .badge-1 {
+        background: var(--color-background-success);
+        color: var(--color-text-success);
+    }
+    .badge-2 {
+        background: var(--color-background-warning);
+        color: var(--color-text-warning);
+    }
+    .badge-3 {
+        background: var(--color-background-danger);
+        color: var(--color-text-danger);
+    }
+    .q-text {
+        font-size: 16px;
+        font-weight: 500;
+        line-height: 1.5;
+        margin-bottom: 1.25rem;
+    }
+    .q-text code {
+        font-family: var(--font-mono);
+        font-size: 13px;
+        background: var(--color-background-secondary);
+        padding: 1px 5px;
+        border-radius: 4px;
+    }
+    .opts {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 1rem;
+    }
+    .opt {
+        padding: 0.75rem 1rem;
+        border: 0.5px solid var(--color-border-secondary);
+        border-radius: var(--border-radius-md);
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 1.5;
+        text-align: left;
+        background: var(--color-background-primary);
+        color: var(--color-text-primary);
+        transition:
+            border-color 0.15s,
+            background 0.15s;
+    }
+    .opt:hover:not(:disabled) {
+        background: var(--color-background-secondary);
+        border-color: var(--color-border-primary);
+    }
+    .opt:disabled {
+        cursor: default;
+    }
+    .opt.correct {
+        background: var(--color-background-success);
+        border-color: var(--color-border-success);
+        color: var(--color-text-success);
+    }
+    .opt.wrong {
+        background: var(--color-background-danger);
+        border-color: var(--color-border-danger);
+        color: var(--color-text-danger);
+    }
+    .opt.reveal {
+        background: var(--color-background-success);
+        border-color: var(--color-border-success);
+        color: var(--color-text-success);
+    }
+    .opt code {
+        font-family: var(--font-mono);
+        font-size: 12px;
+    }
+    .feedback {
+        border-radius: var(--border-radius-md);
+        padding: 0.875rem 1rem;
+        font-size: 13px;
+        line-height: 1.65;
+        border: 0.5px solid;
+        margin-bottom: 1rem;
+        display: none;
+    }
+    .feedback.show {
+        display: block;
+    }
+    .feedback.ok {
+        background: var(--color-background-success);
+        border-color: var(--color-border-success);
+        color: var(--color-text-success);
+    }
+    .feedback.ko {
+        background: var(--color-background-danger);
+        border-color: var(--color-border-danger);
+        color: var(--color-text-danger);
+    }
+    .feedback code {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        opacity: 0.85;
+    }
+    .feedback b {
+        font-weight: 500;
+    }
+    .btn {
+        padding: 0.6rem 1.25rem;
+        border: 0.5px solid var(--color-border-secondary);
+        border-radius: var(--border-radius-md);
+        background: var(--color-background-primary);
+        color: var(--color-text-primary);
+        font-size: 14px;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+    .btn:hover {
+        background: var(--color-background-secondary);
+    }
+    .btn:active {
+        transform: scale(0.98);
+    }
+    .nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .counter {
+        font-size: 13px;
+        color: var(--color-text-secondary);
+        font-family: var(--font-mono);
+    }
+    .score-wrap {
+        text-align: center;
+        padding: 2rem 0;
+    }
+    .score-num {
+        font-size: 48px;
+        font-weight: 500;
+        margin: 0.5rem 0;
+    }
+    .score-label {
+        font-size: 14px;
+        color: var(--color-text-secondary);
+        margin-bottom: 1.5rem;
+    }
+    .score-msg {
+        font-size: 15px;
+        line-height: 1.6;
+        max-width: 480px;
+        margin: 0 auto 1.5rem;
+    }
+    .results-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 6px;
+        margin-bottom: 1.5rem;
+    }
+    .r-dot {
+        height: 8px;
+        border-radius: 99px;
+    }
+    .r-dot.hit {
+        background: var(--color-border-success);
+    }
+    .r-dot.miss {
+        background: var(--color-border-danger);
+    }
+    .divider {
+        height: 0.5px;
+        background: var(--color-border-tertiary);
+        margin: 1.25rem 0;
+    }
+</style>
+
+<div class="wrap">
+    <div class="header">
+        <div class="title">Quiz — arquitetura posts-app</div>
+        <div class="meta">15 perguntas · 3 níveis de dificuldade · foco em raciocínio prático</div>
+    </div>
+    <div class="prog-bar"><div class="prog-fill" id="prog"></div></div>
+    <div id="quiz"></div>
+</div>
+
+<script>
+    const Q = [
+        {
+            lvl: 1,
+            q: "Por que o <code>Dockerfile</code> copia o <code>package.json</code> antes do <code>COPY . .</code>?",
+            opts: [
+                "Para que o Node.js encontre as dependências antes de iniciar o servidor.",
+                "Para aproveitar o cache de layers do Docker: se o <code>package.json</code> não mudou, a layer do <code>npm install</code> é reutilizada e as dependências não são baixadas novamente.",
+                "Porque o <code>COPY . .</code> sobrescreve o <code>package.json</code> se ele for copiado depois.",
+                "Para reduzir o tamanho final da imagem Docker.",
+            ],
+            ans: 1,
+            ok: "Correto. O sistema de cache do Docker funciona por layers em sequência. Se o <code>package.json</code> não mudou, a layer do <code>npm install</code> vem do cache — de ~40s para ~5s por build. Só mudanças no código (que ocorrem com muito mais frequência) invalidam layers após o <code>COPY . .</code>.",
+            ko: "A ordem das instruções no Dockerfile determina o que é cacheado. O Docker invalida o cache a partir da primeira layer que mudou. Se você copiar tudo de uma vez com <code>COPY . .</code>, qualquer mudança no código invalida a layer do <code>npm install</code> — forçando download de todos os pacotes.",
+        },
+        {
+            lvl: 1,
+            q: "O que o <code>depends_on: condition: service_healthy</code> garante no <code>docker-compose.yml</code>?",
+            opts: [
+                "Garante que o container do MySQL está criado e em execução.",
+                "Garante que o container do MySQL passou no healthcheck — ou seja, o processo <code>mysqld</code> está aceitando conexões — antes do Node.js tentar se conectar.",
+                "Garante que o MySQL tem dados suficientes para a aplicação funcionar.",
+                "Garante que os volumes do MySQL foram criados com sucesso.",
+            ],
+            ans: 1,
+            ok: 'Exato. "Container rodando" e "serviço pronto para aceitar conexões" são estados diferentes. O <code>mysqld</code> pode levar alguns segundos para inicializar completamente após o processo subir. O healthcheck com <code>mysqladmin ping</code> valida que o banco está de fato respondendo — eliminando race conditions no boot.',
+            ko: 'Um container pode estar "running" mas o processo interno ainda estar inicializando. O MySQL leva alguns segundos após o processo subir para aceitar conexões. Sem <code>service_healthy</code>, o Node.js tentaria conectar antes do banco estar pronto e quebraria na inicialização.',
+        },
+        {
+            lvl: 1,
+            q: "Qual é a função do <code>.dockerignore</code> em relação ao <code>COPY . .</code> no Dockerfile?",
+            opts: [
+                "Define quais arquivos o container pode acessar em tempo de execução.",
+                "Lista arquivos que não devem ser enviados ao Docker Hub durante o <code>docker push</code>.",
+                "Define quais arquivos e pastas são excluídos do contexto de build — o que o <code>COPY . .</code> copia para dentro da imagem.",
+                "Configura permissões de leitura e escrita dentro do container.",
+            ],
+            ans: 2,
+            ok: "Correto. O <code>COPY . .</code> copia tudo do diretório atual para dentro da imagem, respeitando o <code>.dockerignore</code>. Excluir <code>node_modules/</code> é crítico: copiar o <code>node_modules</code> compilado para Windows dentro de uma imagem Linux Alpine quebraria módulos nativos como o <code>bcrypt</code>.",
+            ko: "O <code>.dockerignore</code> atua no contexto de build — o conjunto de arquivos que o daemon Docker recebe antes de executar o Dockerfile. O <code>COPY . .</code> opera sobre esse contexto. Sem ele, os 300MB de <code>node_modules</code> do Windows seriam copiados para dentro da imagem Linux Alpine.",
+        },
+        {
+            lvl: 1,
+            q: "Por que a pasta <code>mysql/</code> foi adicionada ao <code>.dockerignore</code>?",
+            opts: [
+                "Para evitar que os arquivos <code>.cnf</code> sejam sobrescritos pelo container.",
+                "Os arquivos <code>.cnf</code> e certificados TLS são configuração de infraestrutura — não pertencem à imagem Node.js. Eles são montados diretamente nos containers MySQL via volumes no Compose.",
+                "Para que o MySQL não leia configurações duplicadas.",
+                "Para proteger as chaves privadas de serem expostas em logs do Docker.",
+            ],
+            ans: 1,
+            ok: "Exato. A imagem Node.js não precisa saber como o MySQL foi configurado. Os arquivos <code>.cnf</code> e os certificados são montados via <code>volumes:</code> nos containers MySQL pelo Compose — não dentro da imagem da aplicação. Resultado: imagem menor, contexto de build menor, build mais rápido.",
+            ko: "Os arquivos <code>.cnf</code> são montados como volumes diretamente nos containers MySQL: <code>./mysql/certs:/etc/mysql/certs:ro</code>. O servidor Node.js nunca lê esses arquivos — quem os usa é o próprio processo <code>mysqld</code> dentro dos containers MySQL.",
+        },
+        {
+            lvl: 2,
+            q: "Por que o <code>migrate.js</code> conecta sempre em <code>DB_HOST_MASTER</code> e nunca na Replica?",
+            opts: [
+                "Porque o Master tem mais memória disponível para executar migrations grandes.",
+                "Porque a Replica tem <code>read_only=ON</code> — qualquer <code>CREATE TABLE</code> ou <code>INSERT</code> seria rejeitado com erro. Migrations são operações de escrita e pertencem ao Master.",
+                "Porque o Master processa SQL mais rápido que a Replica.",
+                "Por convenção de nomenclatura — tecnicamente funcionaria nos dois.",
+            ],
+            ans: 1,
+            ok: "Correto. <code>read_only=ON</code> na Replica não é apenas uma convenção — é um bloqueio real do MySQL. Qualquer operação de escrita retorna: <code>ERROR 1290: The MySQL server is running with the --read-only option</code>. O servidor nunca subiria se o migrate tentasse executar na Replica.",
+            ko: "<code>read_only=ON</code> é uma restrição hard do MySQL — não é configurável em runtime por usuários comuns. Conectar o <code>migrate.js</code> na Replica resultaria em falha imediata em qualquer <code>CREATE TABLE</code>, <code>INSERT</code> ou <code>ALTER TABLE</code>, abortando toda a inicialização do container.",
+        },
+        {
+            lvl: 2,
+            q: "O <code>migrate.js</code> executa um <code>CREATE TABLE posts</code> no Master. O que acontece na Replica sem nenhuma configuração extra?",
+            opts: [
+                "Nada — a Replica só recebe dados via <code>INSERT</code>, não mudanças estruturais.",
+                "A tabela precisa ser criada manualmente na Replica também.",
+                "O <code>CREATE TABLE</code> é registrado no binary log do Master, o IO Thread da Replica lê esse evento e o SQL Thread executa na Replica automaticamente.",
+                "A Replica copia o arquivo de dados do Master via volume compartilhado.",
+            ],
+            ans: 2,
+            ok: "Exato. O binary log (ativado com <code>--log-bin=mysql-bin</code>) registra todas as mudanças — DDL (estrutura) e DML (dados). O IO Thread da Replica lê continuamente o binary log do Master e grava no relay log. O SQL Thread executa esses eventos localmente. A replicação é transparente para a aplicação.",
+            ko: "A replicação do MySQL captura tanto DDL (<code>CREATE TABLE</code>, <code>ALTER</code>) quanto DML (<code>INSERT</code>, <code>UPDATE</code>). Com <code>--binlog-format=ROW</code>, o binary log registra as mudanças a nível de linha. Não existe disco compartilhado — a sincronização é 100% via rede pelo protocolo de replicação.",
+        },
+        {
+            lvl: 2,
+            q: "<code>poolLeitura</code> tem <code>connectionLimit: 20</code>. <code>poolEscrita</code> tem apenas 5. Por quê essa assimetria?",
+            opts: [
+                "Porque o MySQL Master suporta menos conexões simultâneas por limitação de hardware.",
+                "Leitura representa ~90% do tráfego em redes sociais. Mais conexões no pool de leitura = mais queries paralelas = menor latência no feed. Mais conexões no Master = mais contenção de locks nas escritas = degradação de performance.",
+                "Para economizar memória RAM no servidor.",
+                "Porque o MySQL Replica processa queries mais rápido que o Master.",
+            ],
+            ans: 1,
+            ok: "Correto. Em plataformas como Reddit, a proporção leitura/escrita é de 10:1 ou mais. Locks de escrita no MySQL (row-level locks) são exclusivos — múltiplas escritas simultâneas disputam o mesmo recurso. O Reddit usa até 100 conexões por Replica em pico e apenas 5 a 10 no Master exatamente por esse motivo.",
+            ko: "O gargalo de escrita no MySQL está em lock contention — quando múltiplas conexões tentam escrever no mesmo índice ou linha, elas ficam em fila. Aumentar o pool de escrita não aumenta throughput, aumenta a fila de espera. Já leituras são paralelas e não se bloqueiam mutuamente — mais conexões = mais paralelismo real.",
+        },
+        {
+            lvl: 2,
+            q: "Por que o <code>setup-replication.js</code> executa <code>STOP REPLICA</code> antes do <code>CHANGE REPLICATION SOURCE TO</code>?",
+            opts: [
+                "Para liberar memória RAM na Replica antes de reconfigurar.",
+                "Porque <code>CHANGE REPLICATION SOURCE TO</code> falha se o IO Thread ou SQL Thread estiver ativo — o MySQL exige que a replicação esteja parada antes de alterar a configuração da fonte.",
+                "Para evitar que dados cheguem durante a configuração e causem inconsistência.",
+                "Por sequência de segurança — tecnicamente funcionaria sem o STOP.",
+            ],
+            ans: 1,
+            ok: 'Correto. O MySQL rejeita <code>CHANGE REPLICATION SOURCE TO</code> com erro se os threads de replicação estiverem rodando. O <code>STOP REPLICA</code> para o IO Thread e o SQL Thread — liberando o estado para reconfiguração. O script depois executa <code>START REPLICA</code> e aguarda 2s para confirmar que ambos voltaram com status "Yes".',
+            ko: "<code>CHANGE REPLICATION SOURCE TO</code> modifica a configuração interna da Replica (endereço do Master, credenciais, posição no binary log). O MySQL não permite alterar essa configuração com threads ativos — é equivalente a trocar o HD de um servidor sem desligá-lo. O erro retornado seria: <code>ERROR 3083: The replication channel is running</code>.",
+        },
+        {
+            lvl: 2,
+            q: "Os certificados TLS em <code>mysql/certs/</code> funcionam no Vultr (Linux) mas não no Windows com Docker Desktop. Por quê?",
+            opts: [
+                "O Windows não suporta o formato PEM de certificados.",
+                "O Docker Desktop no Windows não suporta volumes bind mount.",
+                "Bind mounts no Windows (via Docker Desktop) atribuem permissão 777 a todos os arquivos. O OpenSSL recusa chaves privadas com permissão 777 por segurança — exige no máximo 600. No Linux as permissões Unix reais são preservadas.",
+                "O MySQL 8.0 valida certificados apenas em sistemas Linux.",
+            ],
+            ans: 2,
+            ok: "Exato. O OpenSSL implementa uma verificação de segurança: chaves privadas acessíveis a outros usuários (<code>chmod 777</code>) são recusadas com erro. No Windows, o Docker Desktop usa uma camada de virtualização que converte permissões Unix para 777 em bind mounts. A solução é deixar o MySQL auto-gerar seus próprios certs em desenvolvimento — e usar os certs reais apenas em produção no Linux.",
+            ko: "O problema é específico de permissões Unix. O OpenSSL verifica o modo do arquivo antes de carregar a chave privada. <code>chmod 777</code> significa que qualquer processo no sistema pode ler a chave — o que o OpenSSL interpreta como risco de segurança e rejeita. O Vultr (Ubuntu/Linux) preserva as permissões reais do filesystem — <code>chmod 600</code> funciona normalmente.",
+        },
+        {
+            lvl: 2,
+            q: "O que acontece se você remover o volume anônimo <code>- /app/node_modules</code> do <code>docker-compose.override.yml</code> no Windows?",
+            opts: [
+                "O servidor reinicia mais rápido porque tem menos dados para sincronizar.",
+                "O <code>node_modules</code> compilado para Linux Alpine dentro do container é sobrescrito pelo <code>node_modules</code> do Windows — que contém binários incompatíveis. Módulos nativos como <code>bcrypt</code> quebram.",
+                "O hot reload para de funcionar porque o nodemon não consegue detectar mudanças.",
+                "O container falha ao iniciar por falta de espaço em disco.",
+            ],
+            ans: 1,
+            ok: 'Correto. O volume <code>.:/app</code> monta todo o projeto do Windows dentro do container — incluindo o <code>node_modules</code> local. O volume anônimo <code>/app/node_modules</code> cria uma "máscara" sobre essa pasta dentro do container, preservando o <code>node_modules</code> compilado pelo <code>npm install</code> do Alpine Linux. Sem ele, binários Windows sobrescrevem binários Linux.',
+            ko: "O Docker processa volumes em ordem de especificidade. O volume bind <code>.:/app</code> monta tudo, incluindo <code>node_modules</code>. O volume anônimo <code>/app/node_modules</code> sobrescreve especificamente aquela subpasta com o conteúdo interno do container — compilado para Linux Alpine. É um pattern essencial para desenvolvimento cross-platform com módulos nativos.",
+        },
+        {
+            lvl: 3,
+            q: "O índice <code>KEY idx_feed (status, criado_em DESC)</code> na tabela <code>posts</code> tem <code>status</code> como primeira coluna. Se você invertesse a ordem para <code>(criado_em DESC, status)</code>, o que aconteceria com a query <code>WHERE status = 'publicado' ORDER BY criado_em DESC</code>?",
+            opts: [
+                "Nada — o MySQL é inteligente o suficiente para reordenar as colunas do índice automaticamente.",
+                "O índice invertido seria menos eficiente para filtrar por <code>status</code>: o MySQL precisaria varrer muito mais linhas antes de filtrar, porque <code>criado_em</code> tem alta cardinalidade — milhares de valores únicos — enquanto <code>status</code> filtra a maioria dos posts de uma vez.",
+                "O índice invertido seria mais eficiente porque <code>criado_em</code> já está na ordem que o <code>ORDER BY</code> precisa.",
+                "Não faria diferença para o feed porque o <code>FULLTEXT</code> seria usado de qualquer forma.",
+            ],
+            ans: 1,
+            ok: 'Correto. Colocar a coluna de baixa cardinalidade (<code>status</code>) primeiro permite que o MySQL descarte a maioria dos posts logo na entrada do índice — apenas "publicado" passa. Depois disso, dentro dessa fatia já filtrada, <code>criado_em DESC</code> fornece a ordem sem sort adicional. Com <code>criado_em</code> primeiro, o MySQL leria o índice ordenado por data e filtraria <code>status</code> post a post — muito menos eficiente.',
+            ko: "A regra do índice composto: coluna de maior seletividade (filtra mais registros) vai primeiro quando ela é usada em <code>WHERE</code>. <code>status = 'publicado'</code> pode eliminar 30-40% dos posts imediatamente. Se <code>criado_em</code> viesse primeiro, o MySQL precisaria percorrer linhas ordenadas por data e checar o status de cada uma — sem aproveitar o índice para o filtro.",
+        },
+        {
+            lvl: 3,
+            q: "O <code>setup-replication.js</code> é descrito como idempotente. O que isso significa e como o script implementa essa propriedade?",
+            opts: [
+                "Significa que o script pode ser executado em paralelo em múltiplos containers sem conflito.",
+                "Significa que o script pode ser executado múltiplas vezes sem causar efeitos colaterais: <code>CREATE USER IF NOT EXISTS</code> não falha se o usuário já existe, e o script verifica <code>Replica_IO_Running</code> antes de reconfigurar.",
+                "Significa que o script não modifica o estado do banco — apenas lê informações de status.",
+                "Significa que o script funciona tanto no Master quanto na Replica sem modificação.",
+            ],
+            ans: 1,
+            ok: "Exato. Idempotência em scripts de inicialização é uma propriedade crítica: garante que reinicializações de container não quebrem um ambiente já configurado. <code>CREATE USER IF NOT EXISTS</code> não lança erro se o usuário já existe. Verificar <code>Replica_IO_Running = Yes</code> permite ao script detectar que a replicação já está ativa e encerrar sem reconfigurar — evitando resets desnecessários do relay log.",
+            ko: "Idempotência significa que <code>f(f(x)) = f(x)</code> — executar uma operação múltiplas vezes tem o mesmo resultado que executar uma única vez. No contexto do script: se a replicação já estiver funcionando, reconfigurá-la do zero reiniciaria o relay log do ponto atual do binary log — potencialmente causando inconsistências. O script deve detectar o estado existente e preservá-lo.",
+        },
+        {
+            lvl: 3,
+            q: "Por que o <code>migrate.js</code> usa um <code>Set</code> para armazenar os arquivos já executados em vez de consultar a tabela para cada arquivo?",
+            opts: [
+                "Porque o MySQL não suporta múltiplas queries em uma mesma conexão sequencialmente.",
+                "Lookup em <code>Set</code> é O(1) — tempo constante independente do tamanho. Consultar a tabela para cada arquivo seria N queries — uma por migration — criando N round-trips de rede para o banco. Com o <code>Set</code> em memória, o lookup é uma operação local sem I/O.",
+                "Para evitar lock na tabela <code>migrations_executadas</code> durante a execução.",
+                "Porque o <code>SELECT</code> na Replica retornaria dados desatualizados.",
+            ],
+            ans: 1,
+            ok: "Correto. Com 50 arquivos de migration, N queries = 50 round-trips de rede. Cada round-trip pode custar 1-5ms na rede interna do Docker. Uma query única que retorna todos os registros + <code>Set</code> em memória = 1 round-trip total + lookup O(1) por arquivo. É o padrão batch read que o Reddit aplica em qualquer acesso a banco que pode ser substituído por uma única query de bulk.",
+            ko: "A diferença é algorítmica: N queries para N arquivos é O(N) em round-trips de rede. Buscar tudo de uma vez e construir um <code>Set</code> é O(1) em round-trips + O(1) por lookup. Em produção, com centenas de migrations e latência de rede, a versão N-queries seria significativamente mais lenta na inicialização do container.",
+        },
+        {
+            lvl: 3,
+            q: "O <code>--binlog-format=ROW</code> está configurado no Master. O que essa opção define e por que é preferida ao formato <code>STATEMENT</code>?",
+            opts: [
+                "<code>ROW</code> registra o SQL executado. <code>STATEMENT</code> registra as linhas afetadas. <code>ROW</code> é menor em tamanho.",
+                "<code>ROW</code> registra o estado antes e depois de cada linha afetada. <code>STATEMENT</code> registra o SQL executado — que pode ser não-determinístico (ex: <code>INSERT ... WHERE criado_em < NOW()</code>). <code>ROW</code> garante que a Replica sempre chegue ao mesmo estado final independente do contexto de execução.",
+                "<code>ROW</code> é obrigatório para usar SSL na replicação. <code>STATEMENT</code> não suporta conexões criptografadas.",
+                "<code>ROW</code> replica apenas INSERTs. <code>STATEMENT</code> replica UPDATE e DELETE também.",
+            ],
+            ans: 1,
+            ok: "Correto. O problema do formato <code>STATEMENT</code>: funções como <code>NOW()</code>, <code>RAND()</code>, <code>UUID()</code> produzem resultados diferentes se executadas em momentos distintos no Master e na Replica. Com <code>ROW</code>, o binary log contém os valores reais das linhas — não o SQL. A Replica nunca precisa re-executar uma função — apenas aplica o delta registrado. Resultado: consistência garantida independente de tempo ou contexto.",
+            ko: "<code>STATEMENT</code> replicar o SQL parece eficiente até você considerar funções não-determinísticas. <code>DELETE FROM posts WHERE criado_em < NOW()</code> executado com 1 segundo de diferença entre Master e Replica pode deletar linhas diferentes. <code>ROW</code> elimina esse problema registrando o resultado concreto — quais linhas foram afetadas e seus valores exatos.",
+        },
+        {
+            lvl: 3,
+            q: "O <code>server.js</code> atual expõe um endpoint <code>GET /health</code>. Qual é a diferença arquitetural entre esse healthcheck da aplicação e o healthcheck do <code>docker-compose.yml</code> que usa <code>mysqladmin ping</code>?",
+            opts: [
+                "Não há diferença — ambos verificam a mesma coisa de formas diferentes.",
+                "O healthcheck do Compose verifica se o processo MySQL está respondendo ao protocolo de autenticação. O <code>/health</code> do Node.js verifica se a camada de aplicação consegue executar queries reais (<code>SELECT 1</code>) em ambos os pools — validando a stack completa: container ativo + processo MySQL + autenticação + pool de conexões + rede interna Docker.",
+                "O healthcheck do Compose é mais confiável porque acessa o MySQL diretamente sem passar pelo Node.js.",
+                "O <code>/health</code> do Node.js verifica apenas o Master — o Compose verifica apenas a Replica.",
+            ],
+            ans: 1,
+            ok: "Exato. São dois níveis diferentes de verificação. O healthcheck do Compose garante que o MySQL está pronto para aceitar conexões — necessário para o <code>depends_on</code>. O <code>/health</code> da aplicação valida a stack do ponto de vista do Node.js: autenticação funcional, pool configurado corretamente, rede interna Docker resolvendo hostnames, ambos os bancos respondendo. É o que sistemas de monitoramento externos (como o health check do Vultr) usariam para decidir se o container precisa ser reiniciado.",
+            ko: "Pense em camadas: o <code>mysqladmin ping</code> bate na porta 3306 e verifica o handshake do protocolo MySQL — suficiente para saber que o processo está vivo. O <code>/health</code> da aplicação executa um <code>SELECT 1</code> real passando por pool de conexões, autenticação de usuário, resolução DNS interna do Docker e processamento de query. Um banco pode responder ao ping mas rejeitar conexões por credenciais incorretas ou problema de rede — o <code>/health</code> capturaria isso.",
+        },
+    ];
+
+    let cur = 0,
+        score = 0,
+        hits = [];
+    const quiz = document.getElementById("quiz");
+    const prog = document.getElementById("prog");
+
+    function render() {
+        if (cur >= Q.length) {
+            showScore();
+            return;
+        }
+        const q = Q[cur];
+        prog.style.width = (cur / Q.length) * 100 + "%";
+        const lvlLabel = ["", "Iniciante", "Intermediário", "Avançado"][q.lvl];
+        const lvlClass = ["", "badge-1", "badge-2", "badge-3"][q.lvl];
+        quiz.innerHTML = `
+    <div class="badge ${lvlClass}">${lvlLabel}</div>
+    <div class="q-text">${q.q}</div>
+    <div class="opts" id="opts">
+      ${q.opts.map((o, i) => `<button class="opt" onclick="pick(${i})" id="o${i}">${o}</button>`).join("")}
+    </div>
+    <div class="feedback" id="fb"></div>
+    <div class="nav">
+      <span class="counter">${cur + 1} / ${Q.length}</span>
+      <button class="btn" id="nxt" onclick="next()" style="display:none">Próxima →</button>
+    </div>
+  `;
+    }
+
+    function pick(i) {
+        const q = Q[cur];
+        const correct = i === q.ans;
+        if (correct) {
+            score++;
+            hits.push(1);
+        } else {
+            hits.push(0);
+        }
+        document.querySelectorAll(".opt").forEach((b, j) => {
+            b.disabled = true;
+            if (j === q.ans) b.classList.add(correct ? "correct" : "reveal");
+            else if (j === i && !correct) b.classList.add("wrong");
+        });
+        const fb = document.getElementById("fb");
+        fb.className = "feedback show " + (correct ? "ok" : "ko");
+        fb.innerHTML = (correct ? "<b>Correto.</b> " : "<b>Incorreto.</b> ") + (correct ? q.ok : q.ko);
+        document.getElementById("nxt").style.display = "inline-block";
+    }
+
+    function next() {
+        cur++;
+        render();
+    }
+
+    function showScore() {
+        prog.style.width = "100%";
+        const pct = Math.round((score / Q.length) * 100);
+        let msg = "";
+        if (pct >= 90) msg = "Domínio sólido da arquitetura. Você raciocina sobre os trade-offs — não apenas memorizou decisões.";
+        else if (pct >= 70) msg = "Boa compreensão do fluxo geral. Revise os pontos onde errou — especialmente a interação entre replicação, locks e cache de layers.";
+        else if (pct >= 50) msg = "Base presente, mas a lógica por trás das decisões ainda precisa consolidar. Releia os comentários do <code>database.js</code> e do <code>docker-compose.yml</code>.";
+        else msg = "Revise o fluxo completo de inicialização e a separação Master/Replica. Os conceitos estão conectados — entender um facilita os outros.";
+
+        const dots = hits.map((h) => `<div class="r-dot ${h ? "hit" : "miss"}"></div>`).join("");
+
+        quiz.innerHTML = `
+    <div class="score-wrap">
+      <div style="font-size:13px;color:var(--color-text-secondary)">resultado final</div>
+      <div class="score-num">${score}<span style="font-size:24px;color:var(--color-text-secondary)">/${Q.length}</span></div>
+      <div class="score-label">${pct}% de aproveitamento</div>
+      <div class="results-grid">${dots}</div>
+      <div class="divider"></div>
+      <div class="score-msg">${msg}</div>
+      <button class="btn" onclick="restart()">Refazer quiz</button>
+    </div>
+  `;
+    }
+
+    function restart() {
+        cur = 0;
+        score = 0;
+        hits = [];
+        render();
+    }
+    render();
+</script>

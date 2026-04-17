@@ -15,7 +15,7 @@ services:
             context: .
             dockerfile: Dockerfile
             args:
-                BUILDKIT_INLINE_CACHE: "1" # ativa cache inline no dev (docker-compose.yml)
+                BUILDKIT_INLINE_CACHE: "1" # ativa cache inline no dev
 
         # porta exposta pro localhost do notebook
         # em desenvolvimento você acessa localhost:3000 diretamente no navegador
@@ -28,19 +28,19 @@ services:
         # erros completos aparecem no terminal — essencial pra debug
         environment:
             NODE_ENV: development # modo desenvolvimento — logs verbosos
-            PORT: 3000 # porta interna do servidor Express
+            PORT: 3000            # porta interna do servidor Express
 
-            # volumes de hot reload — exclusivos do desenvolvimento
-            # .:/app monta o código do notebook dentro do container
-            # você salva um arquivo → nodemon detecta → servidor reinicia automaticamente
-            # em produção nunca se monta código do disco no container
-            # a imagem carrega o código via COPY . . (Dockerfile) — imutável e autossuficiente
-            volumes:
-                - .:/app # hot reload — código do notebook no container
-                - /app/node_modules # protege o node_modules compilado pro Linux Alpine
-                  # sem esse volume anônimo o Windows sobrescreveria
-                  # o node_modules do Linux com binários incompatíveis
-                  # bcrypt e outros módulos nativos quebrariam
+        # volumes de hot reload — exclusivos do desenvolvimento           ← CORRIGIDO: saiu de dentro de environment
+        # .:/app monta o código do notebook dentro do container
+        # você salva um arquivo → nodemon detecta → servidor reinicia automaticamente
+        # em produção nunca se monta código do disco no container
+        # a imagem carrega o código via COPY . . (Dockerfile) — imutável e autossuficiente
+        volumes:
+            - .:/app             # hot reload — código do notebook no container
+            - /app/node_modules  # protege o node_modules compilado pro Linux Alpine
+                                 # sem esse volume anônimo o Windows sobrescreveria
+                                 # o node_modules do Linux com binários incompatíveis
+                                 # bcrypt e outros módulos nativos quebrariam
 
         # executa em sequência — ordem obrigatória:
         # 1. setup-replication: configura Master/Replica (idempotente — pula se já feito)
@@ -52,3 +52,20 @@ services:
               node src/scripts/migrate.js &&
               npx nodemon server.js
             "
+
+    mysql_master:                # ← CORRIGIDO: ports agora dentro do serviço
+        ports:
+            - "3306:3306"        # host:container — Master acessível no Windows para o VS Code
+        command:
+            - --server-id=1
+            - --log-bin=mysql-bin
+            - --binlog-format=ROW
+            - --binlog-expire-logs-seconds=604800  
+
+    mysql_replica:
+        ports:
+            - "3307:3306"
+        command:
+            - --server-id=2
+            - --relay-log=mysql-relay-bin
+            - --read-only=ON

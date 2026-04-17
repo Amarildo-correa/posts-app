@@ -4,6 +4,7 @@
 // O pacote 'dotenv' é dispensado aqui pois o Docker já popula o process.env do Node.js.
 
 import express from "express"; // Framework web minimalista para gerenciar rotas e middleware.
+
 // Importação de pools distintos para separar o tráfego de Escrita (Master) do tráfego de Leitura (Replica).
 // Essa estratégia é fundamental para escalar aplicações que possuem muito mais leitura do que escrita.
 import { poolEscrita, poolLeitura } from "./src/config/database.js";

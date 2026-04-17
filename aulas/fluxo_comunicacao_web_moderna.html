@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Fluxo de Comunicação Web Moderna — Comentaaê</title>
+        <style>
+            :root {
+                /* Fundo único solicitado */
+                --color-background-unique: #0d1117;
+
+                /* Tipografia e Cores de Texto */
+                --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+                --font-mono: "Fira Code", "Cascadia Code", monospace;
+                --color-text-primary: #f0f6fc;
+                --color-text-secondary: #8b949e;
+                --color-text-tertiary: #6e7681;
+
+                /* Bordas e Estados */
+                --color-border-primary: #30363d;
+                --color-border-secondary: #21262d;
+                --color-border-tertiary: #30363d;
+                --border-radius-lg: 12px;
+                --border-radius-md: 8px;
+
+                /* Cores de Destaque Adaptadas para Dark Mode */
+                --color-background-info: rgba(56, 139, 253, 0.15);
+                --color-text-info: #58a6ff;
+                --color-border-info: rgba(88, 166, 255, 0.3);
+
+                --color-background-success: rgba(46, 160, 67, 0.15);
+                --color-text-success: #3fb950;
+                --color-border-success: rgba(63, 185, 80, 0.3);
+
+                --color-background-warning: rgba(187, 128, 9, 0.15);
+                --color-text-warning: #d29922;
+                --color-border-warning: rgba(210, 153, 34, 0.3);
+
+                --color-background-danger: rgba(248, 81, 73, 0.15);
+                --color-text-danger: #f85149;
+            }
+
+            /* Reset e Estrutura Base */
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            body {
+                background-color: var(--color-background-unique);
+                color: var(--color-text-primary);
+                font-family: var(--font-sans);
+                line-height: 1.5;
+                display: flex;
+                justify-content: center;
+                padding: 2rem 1rem;
+                min-height: 100vh;
+            }
+
+            .wrap {
+                width: 100%;
+                max-width: 800px;
+                background-color: var(--color-background-unique);
+                padding: 1rem 0;
+                border-radius: var(--border-radius-lg);
+            }
+
+            .sr-only {
+                position: absolute;
+                width: 1px;
+                height: 1px;
+                padding: 0;
+                margin: -1px;
+                overflow: hidden;
+                clip: rect(0, 0, 0, 0);
+                border: 0;
+            }
+
+            /* Navegação superior (Pills) */
+            .nav-pills {
+                display: flex;
+                gap: 6px;
+                flex-wrap: wrap;
+                margin-bottom: 1.5rem;
+            }
+            .pill {
+                padding: 5px 14px;
+                font-size: 18px;
+                border-radius: 999px;
+                border: 0.5px solid var(--color-border-secondary);
+                background: transparent;
+                color: var(--color-text-secondary);
+                cursor: pointer;
+                transition: all 0.2s;
+                font-weight: 500;
+            }
+            .pill.active {
+                background: var(--color-background-info);
+                color: var(--color-text-info);
+                border-color: var(--color-text-info);
+            }
+            .pill.done {
+                background: var(--color-background-success);
+                color: var(--color-text-success);
+                border-color: var(--color-text-success);
+            }
+
+            /* Painéis */
+            .panel {
+                display: none;
+            }
+            .panel.active {
+                display: block;
+                animation: fadeIn 0.3s ease-in;
+            }
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                }
+                to {
+                    opacity: 1;
+                }
+            }
+
+            .layer-title {
+                font-size: 18px;
+                font-weight: 500;
+                color: var(--color-text-primary);
+                margin-bottom: 4px;
+            }
+            .layer-sub {
+                font-size: 18px;
+                color: var(--color-text-secondary);
+                margin-bottom: 1.25rem;
+                line-height: 1.6;
+            }
+
+            /* Boxes de Fluxo com Fundo Único */
+            .flow-box {
+                background-color: var(--color-background-unique);
+                border: 0.5px solid var(--color-border-tertiary);
+                border-radius: var(--border-radius-lg);
+                padding: 1rem 1.25rem;
+                margin-bottom: 10px;
+            }
+            .flow-box-head {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-bottom: 0.6rem;
+            }
+            .badge {
+                font-size: 18px;
+                padding: 2px 8px;
+                border-radius: 999px;
+                font-weight: 500;
+                white-space: nowrap;
+                border: 1px solid transparent;
+            }
+
+            .b-purple {
+                background: var(--color-background-info);
+                color: var(--color-text-info);
+                border-color: var(--color-border-info);
+            }
+            .b-green {
+                background: var(--color-background-success);
+                color: var(--color-text-success);
+                border-color: var(--color-border-success);
+            }
+            .b-amber {
+                background: var(--color-background-warning);
+                color: var(--color-text-warning);
+                border-color: var(--color-border-warning);
+            }
+            .b-gray {
+                background: rgba(110, 118, 129, 0.1);
+                color: var(--color-text-secondary);
+                border-color: var(--color-border-secondary);
+            }
+            .b-red {
+                background: var(--color-background-danger);
+                color: var(--color-text-danger);
+                border-color: var(--color-border-danger);
+            }
+
+            .flow-box-title {
+                font-size: 18px;
+                font-weight: 500;
+                color: var(--color-text-primary);
+            }
+            .flow-box-body {
+                font-size: 18px;
+                color: var(--color-text-secondary);
+                line-height: 1.65;
+            }
+            .flow-box-body code {
+                font-size: 18px;
+                color: var(--color-text-warning);
+                background: rgba(210, 153, 34, 0.1);
+                padding: 1px 4px;
+                border-radius: 3px;
+            }
+
+            .arrow {
+                text-align: center;
+                color: var(--color-text-tertiary);
+                font-size: 18px;
+                padding: 4px 0;
+            }
+            .two-col {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+
+            /* Rodapé de Navegação */
+            .nav-bottom {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-top: 1.25rem;
+                padding-top: 1rem;
+                border-top: 0.5px solid var(--color-border-tertiary);
+            }
+            .nav-bottom button {
+                padding: 7px 18px;
+                font-size: 18px;
+                border-radius: var(--border-radius-md);
+                border: 0.5px solid var(--color-border-secondary);
+                background: #21262d;
+                color: var(--color-text-primary);
+                cursor: pointer;
+                transition: all 0.15s;
+            }
+            .nav-bottom button:hover {
+                background: #30363d;
+                border-color: var(--color-text-secondary);
+            }
+            .nav-bottom button.primary {
+                background: var(--color-text-info);
+                color: #0d1117;
+                border-color: var(--color-text-info);
+                font-weight: 600;
+            }
+            .nav-bottom button.success {
+                background: var(--color-text-success);
+                color: #0d1117;
+                border-color: var(--color-text-success);
+                font-weight: 600;
+            }
+            .counter {
+                font-size: 18px;
+                color: var(--color-text-tertiary);
+            }
+
+            @media (max-width: 500px) {
+                .two-col {
+                    grid-template-columns: 1fr;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="wrap">
+            <h2 class="sr-only">Fluxo completo de comunicação em uma aplicação web moderna — do clique do usuário ao banco de dados</h2>
+
+            <div class="nav-pills" id="nav"></div>
+
+            <div class="panel active" id="p0">
+                <div class="layer-title">Camada 1 — o usuário clica</div>
+                <div class="layer-sub">Tudo começa no navegador. O usuário abre o feed do bairro no Comentaaê. O navegador precisa buscar esse HTML em algum servidor.</div>
+
+                <div class="flow-box">
+                    <div class="flow-box-head"><span class="badge b-purple">browser</span><span class="flow-box-title">requisição HTTP GET</span></div>
+                    <div class="flow-box-body">
+                        O navegador monta uma requisição HTTP e envia para o servidor:<br /><br />
+                        <code>GET /feed/pinheiros HTTP/1.1</code><br />
+                        <code>Host: comentaae.com</code><br />
+                        <code>Cookie: sessionId=abc123</code><br /><br />
+                        O cookie de sessão vai junto automaticamente — é assim que o servidor sabe quem é o usuário.
+                    </div>
+                </div>
+
+                <div class="arrow">↓ viaja pela internet criptografada via HTTPS (Cloudflare SSL)</div>
+
+                <div class="flow-box">
+                    <div class="flow-box-head"><span class="badge b-green">cloudflare</span><span class="flow-box-title">termina o SSL e repassa</span></div>
+                    <div class="flow-box-body">
+                        O Cloudflare decifra o HTTPS e encaminha a requisição para o servidor Vultr via HTTP interno. Injeta o header <code>X-Regiao: sudeste</code> baseado no IP do usuário.
+                    </div>
+                </div>
+
+                <div class="arrow">↓ chega no servidor Vultr</div>
+
+                <div class="flow-box">
+                    <div class="flow-box-head"><span class="badge b-amber">nginx</span><span class="flow-box-title">roteia para o Node.js</span></div>
+                    <div class="flow-box-body">
+                        O Nginx recebe na porta 80/443 e roteia internamente para o container <code>app_posts:3000</code>. O usuário nunca acessa o Node.js diretamente — o Nginx é a porta de entrada.
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel" id="p1">
+                <div class="layer-title">Camada 2 — o Node.js processa</div>
+                <div class="layer-sub">A requisição chegou no Express. Agora ela percorre o pipeline MVC: middleware → route → controller → model → banco.</div>
+
+                <div class="flow-box">
+                    <div class="flow-box-head"><span class="badge b-purple">middleware</span><span class="flow-box-title">verificação de sessão</span></div>
+                    <div class="flow-box-body">
+                        O <code>auth.middleware.js</code> intercepta a requisição antes do controller. Lê o cookie <code>sessionId</code>, consulta o Redis ou o banco para validar a sessão, e injeta o
+                        usuário autenticado no objeto <code>req.usuario</code>.<br /><br />Se a sessão for inválida, retorna <code>401 Unauthorized</code> antes de chegar no controller. O controller
+                        nunca vê requisições não autenticadas.
+                    </div>
+                </div>
+
+                <div class="arrow">↓ sessão válida — passa para o controller</div>
+
+                <div class="flow-box">
+                    <div class="flow-box-head"><span class="badge b-green">controller</span><span class="flow-box-title">orquestra a lógica</span></div>
+                    <div class="flow-box-body">
+                        O <code>post.controller.js</code> recebe <code>req</code> e <code>res</code>. Ele não sabe nada de SQL — só chama o Model e decide o que fazer com o resultado:<br /><br />
+                        <code>const posts = await PostModel.buscarFeed(bairro)</code><br />
+                        <code>res.render('feed', { posts, usuario })</code>
+                    </div>
+                </div>
+
+                <div class="arrow">↓ chama o model</div>
+
+                <div class="flow-box">
+                    <div class="flow-box-head"><span class="badge b-amber">model</span><span class="flow-box-title">conhece o banco</span></div>
+                    <div class="flow-box-body">
+                        O <code>post.model.js</code> usa o <code>poolLeitura</code> — porque é uma operação de SELECT. Ele monta a query ou chama a Stored Procedure e retorna os dados pro controller.
+                        O model nunca sabe como os dados serão renderizados — só busca e retorna.
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel" id="p2">
+                <div class="layer-title">Camada 3 — o pool de conexões</div>
+                <div class="layer-sub">
+                    Antes de falar com o banco, o Node.js precisa de uma conexão. O pool gerencia esse recurso de forma eficiente — sem abrir e fechar conexões a cada requisição.
+                </div>
+
+                <div class="two-col">
+                    <div class="flow-box">
+                        <div class="flow-box-head"><span class="badge b-red">sem pool</span><span class="flow-box-title">conexão por requisição</span></div>
+                        <div class="flow-box-body">
+                            1. abre conexão TCP com MySQL<br />2. autentica usuário e senha<br />3. executa a query<br />4. fecha a conexão<br /><br />Custo de abertura: ~50ms<br />1.000 req/s = 1.000
+                            conexões/s<br />MySQL colapsa
+                        </div>
+                    </div>
+                    <div class="flow-box">
+                        <div class="flow-box-head"><span class="badge b-green">com pool</span><span class="flow-box-title">conexões reutilizadas</span></div>
+                        <div class="flow-box-body">
+                            1. pega conexão do pool (~0ms)<br />2. executa a query<br />3. devolve pro pool<br /><br />20 conexões abertas permanentemente<br />1.000 req/s compartilham as 20<br />MySQL
+                            estável
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-box" style="margin-top: 10px">
+                    <div class="flow-box-head"><span class="badge b-purple">database.js</span><span class="flow-box-title">dois pools separados por responsabilidade</span></div>
+                    <div class="flow-box-body">
+                        <code>poolEscrita</code> → <code>mysql_master</code> — connectionLimit: 5<br />
+                        <code>poolLeitura</code> → <code>mysql_replica</code> — connectionLimit: 20<br /><br />
+                        O TLS está ativo nas duas conexões — os dados trafegam criptografados dentro da rede Docker. Cada pool mantém as conexões abertas permanentemente e as distribui sob demanda.
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel" id="p3">
+                <div class="layer-title">Camada 4 — Master e Replica</div>
+                <div class="layer-sub">
+                    O pool escolheu a conexão certa. Agora a query chega no banco. Escrita vai pro Master, leitura vai pra Replica — e os dois ficam sincronizados continuamente via replicação.
+                </div>
+
+                <div class="two-col">
+                    <div class="flow-box">
+                        <div class="flow-box-head"><span class="badge b-amber">mysql_master</span><span class="flow-box-title">recebe escrita</span></div>
+                        <div class="flow-box-body">
+                            INSERT, UPDATE, DELETE<br /><br />Executa no próprio banco<br />Registra no binary log:<br /><code>posição 875: INSERT posts...</code><br /><br />Confirma pro Node.js<br />Usuário
+                            vê: "post publicado"
+                        </div>
+                    </div>
+                    <div class="flow-box">
+                        <div class="flow-box-head"><span class="badge b-green">mysql_replica</span><span class="flow-box-title">recebe leitura</span></div>
+                        <div class="flow-box-body">
+                            SELECT — feed, perfil, busca<br /><br />Nunca recebe escrita<br /><code>read_only = ON</code><br /><br />Serve 90% do tráfego<br />connectionLimit: 20<br />locks de
+                            escrita: zero
+                        </div>
+                    </div>
+                </div>
+
+                <div class="arrow">↓ replicação assíncrona contínua via TCP/IP</div>
+
+                <div class="flow-box">
+                    <div class="flow-box-head"><span class="badge b-purple">IO Thread + SQL Thread</span><span class="flow-box-title">sincronização em pipeline</span></div>
+                    <div class="flow-box-body">
+                        IO Thread: conectado ao Master via TCP — baixa eventos do binary log — salva no relay log<br />
+                        SQL Thread: lê o relay log — aplica os eventos nas tabelas da Replica<br /><br />
+                        Os dois rodam em background com prioridade baixa — nunca competem com as queries de leitura dos usuários. Latência de sincronização: ~10ms.
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel" id="p4">
+                <div class="layer-title">Camada 5 — a resposta volta</div>
+                <div class="layer-sub">A query executou, os dados voltaram pro Node.js. Agora o Express monta a resposta e envia de volta para o usuário.</div>
+
+                <div class="flow-box">
+                    <div class="flow-box-head"><span class="badge b-green">SSR — resposta HTML completa</span><span class="flow-box-title">Handlebars renderiza o template</span></div>
+                    <div class="flow-box-body">
+                        O controller chama <code>res.render('feed', { posts })</code>. O Handlebars combina o template com os dados e gera HTML completo. O Node.js devolve:<br /><br />
+                        <code>HTTP/1.1 200 OK</code><br />
+                        <code>Content-Type: text/html</code><br />
+                        <code>&lt;html&gt;...feed completo...&lt;/html&gt;</code><br /><br />
+                        O Googlebot recebe esse HTML e indexa o conteúdo. O usuário vê o feed instantaneamente sem esperar JavaScript.
+                    </div>
+                </div>
+
+                <div class="arrow">↓ depois do HTML chegar no browser</div>
+
+                <div class="flow-box">
+                    <div class="flow-box-head"><span class="badge b-purple">hidratação — Fetch API</span><span class="flow-box-title">interações dinâmicas via SPA</span></div>
+                    <div class="flow-box-body">
+                        O JavaScript hidrata a página. Curtidas, comentários e interações usam <code>fetch('/api/curtir', ...)</code> — sem recarregar o HTML inteiro. O Nginx roteia essas chamadas
+                        para a porta da API:<br /><br />
+                        <code>POST /api/curtir/123</code> → <code>poolEscrita</code> → <code>mysql_master</code><br />
+                        <code>GET /api/feed/cursor/875</code> → <code>poolLeitura</code> → <code>mysql_replica</code>
+                    </div>
+                </div>
+
+                <div class="flow-box">
+                    <div class="flow-box-head"><span class="badge b-amber">WebSocket — notificações em tempo real</span><span class="flow-box-title">conexão persistente bidirecional</span></div>
+                    <div class="flow-box-body">
+                        Quando alguém comenta no post do usuário, o servidor precisa avisar sem que o usuário precise recarregar. O WebSocket mantém uma conexão aberta permanentemente — o servidor
+                        empurra eventos pro browser sem que o browser precise pedir.<br /><br />
+                        HTTP: browser pede → servidor responde → conexão fecha<br />
+                        WebSocket: conexão aberta → servidor envia quando quiser
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel" id="p5">
+                <div class="layer-title">Visão completa — fluxo de ponta a ponta</div>
+                <div class="layer-sub">Do clique do usuário ao dado no banco e de volta. Cada seta é um protocolo diferente, cada camada tem uma responsabilidade única.</div>
+
+                <div class="flow-box">
+                    <div class="flow-box-body" style="line-height: 2">
+                        <span style="color: var(--color-text-primary); font-weight: 500">usuário clica em "ver feed"</span><br />
+                        ↓ HTTPS (Cloudflare SSL — criptografia externa)<br />
+                        <span style="color: var(--color-text-primary); font-weight: 500">Cloudflare</span> → injeta X-Regiao, termina SSL<br />
+                        ↓ HTTP interno<br />
+                        <span style="color: var(--color-text-primary); font-weight: 500">Nginx</span> → roteia para app_posts:3000<br />
+                        ↓ chamada interna Node.js<br />
+                        <span style="color: var(--color-text-primary); font-weight: 500">auth.middleware.js</span> → valida sessão<br />
+                        ↓ req.usuario injetado<br />
+                        <span style="color: var(--color-text-primary); font-weight: 500">post.controller.js</span> → chama PostModel<br />
+                        ↓ chamada ao model<br />
+                        <span style="color: var(--color-text-primary); font-weight: 500">post.model.js</span> → pega conexão do poolLeitura<br />
+                        ↓ TLS interno (criptografia interna)<br />
+                        <span style="color: var(--color-text-primary); font-weight: 500">mysql_replica</span> → executa SELECT feed<br />
+                        ↓ dados retornam pelo mesmo caminho<br />
+                        <span style="color: var(--color-text-primary); font-weight: 500">Handlebars</span> → renderiza HTML completo<br />
+                        ↓ HTTPS de volta ao browser<br />
+                        <span style="color: var(--color-text-primary); font-weight: 500">usuário vê o feed</span> em ~50ms
+                    </div>
+                </div>
+
+                <div class="two-col" style="margin-top: 10px">
+                    <div class="flow-box">
+                        <div class="flow-box-head"><span class="badge b-green">leitura (90%)</span></div>
+                        <div class="flow-box-body">GET → Nginx → Node.js → poolLeitura → mysql_replica → Handlebars → HTML</div>
+                    </div>
+                    <div class="flow-box">
+                        <div class="flow-box-head"><span class="badge b-amber">escrita (10%)</span></div>
+                        <div class="flow-box-body">POST → Nginx → Node.js → poolEscrita → mysql_master → binary log → Replica ~10ms</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-bottom">
+                <button onclick="prev()" id="btn-prev" style="visibility: hidden">← Anterior</button>
+                <span class="counter" id="counter">1 de 6</span>
+                <button onclick="next()" id="btn-next" class="primary">Próxima camada →</button>
+            </div>
+        </div>
+
+        <script>
+            const labels = ["1. clique do usuário", "2. Node.js MVC", "3. pool de conexões", "4. Master/Replica", "5. resposta", "6. visão completa"];
+            const total = 6;
+            let cur = 0,
+                done = new Set();
+            const nav = document.getElementById("nav");
+
+            labels.forEach((l, i) => {
+                const b = document.createElement("button");
+                b.className = "pill" + (i === 0 ? " active" : "");
+                b.textContent = l;
+                b.onclick = () => go(i);
+                b.id = "pill" + i;
+                nav.appendChild(b);
+            });
+
+            function go(i) {
+                done.add(cur);
+                document.querySelectorAll(".panel").forEach((p, j) => p.classList.toggle("active", j === i));
+                document.querySelectorAll(".pill").forEach((b, j) => {
+                    b.classList.remove("active", "done");
+                    if (j === i) b.classList.add("active");
+                    else if (done.has(j)) b.classList.add("done");
+                });
+                cur = i;
+                document.getElementById("counter").textContent = i + 1 + " de " + total;
+                document.getElementById("btn-prev").style.visibility = i === 0 ? "hidden" : "visible";
+                const nb = document.getElementById("btn-next");
+                nb.textContent = i === total - 1 ? "Concluído" : "Próxima camada →";
+                nb.className = i === total - 1 ? "success" : "primary";
+            }
+
+            function next() {
+                if (cur < total - 1) go(cur + 1);
+            }
+            function prev() {
+                if (cur > 0) go(cur - 1);
+            }
+        </script>
+    </body>
+</html>

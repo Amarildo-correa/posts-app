@@ -13,6 +13,7 @@
 services: # Define o início da lista de serviços (containers) que compõem a aplicação.
     # ── SERVIÇO NODE.JS ────────────────────────────────────────
     app_posts: # Nome do serviço da aplicação principal em Node.js.
+        image: posts-app_node 
         build: # Define as instruções de construção da imagem customizada.
             context: . # Define o diretório atual como contexto para o Docker.
             dockerfile: Dockerfile # Aponta para o arquivo com as instruções de instalação do Node.js e dependências.
