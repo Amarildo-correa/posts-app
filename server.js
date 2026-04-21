@@ -61,7 +61,7 @@ app.engine(
 // sem isso o Express não sabe qual engine usar quando receber um res.render()
 app.set("view engine", "hbs");
 
-// define onde o Express vai procurar os arquivos de view
+// define onde o Express vai procurar os arquivos de view.
 // por convenção universal — mesma estrutura que o Medium e o Substack usam
 app.set("views", "views");
 
