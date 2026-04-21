@@ -33,6 +33,38 @@ app.get("/health", async (req, res) => {
     }
 });
 
+// ── CONFIGURAÇÃO DO HANDLEBARS ────────────────────────────────
+// registra o Handlebars como engine padrão do Express
+// 'hbs' é o identificador — qualquer res.render() vai procurar arquivos .hbs
+app.engine(
+    "hbs",
+    engine({
+        // extensão dos templates — padrão do projeto
+        extname: ".hbs",
+
+        // layout padrão — o "esqueleto" HTML que envolve todas as páginas
+        // fica em views/layouts/main.hbs
+        // o Reddit usa o mesmo padrão — shell HTML fixo, conteúdo variável no meio
+        defaultLayout: "main",
+
+        // pasta onde ficam os layouts — o Express vai procurar aqui
+        layoutsDir: "views/layouts/",
+
+        // pasta onde ficam os partials — componentes reutilizáveis
+        // header, footer, post-card são partials
+        // é o equivalente ao sistema de componentes do Facebook
+        partialsDir: "views/partials/",
+    }),
+);
+
+// define 'hbs' como a view engine padrão do Express
+// sem isso o Express não sabe qual engine usar quando receber um res.render()
+app.set("view engine", "hbs");
+
+// define onde o Express vai procurar os arquivos de view
+// por convenção universal — mesma estrutura que o Medium e o Substack usam
+app.set("views", "views");
+
 // Rota principal da aplicação Comentaaê.
 app.get("/", (req, res) => {
     // A menção a "Zero Trust" indica que a segurança não depende apenas do firewall,
