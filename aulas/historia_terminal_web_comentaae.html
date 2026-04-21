@@ -1,0 +1,877 @@
+<!doctype html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>História do Terminal e da Web</title>
+
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+
+        <style>
+            :root {
+                /* Variáveis de Tema Escuro */
+                --font-sans: "Inter", sans-serif;
+                --font-mono: "Inter", sans-serif;
+
+                --color-background-base: #0f1115;
+                --color-background-primary: #181a20;
+                --color-background-secondary: #22252e;
+
+                --color-border-primary: #52525b;
+                --color-border-secondary: #3f3f46;
+                --color-border-tertiary: #27272a;
+
+                --color-text-primary: #f4f4f5;
+                --color-text-secondary: #a1a1aa;
+                --color-text-tertiary: #71717a;
+
+                --border-radius-md: 6px;
+                --border-radius-lg: 10px;
+            }
+
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            body {
+                font-family: var(--font-sans);
+                background-color: var(--color-background-base);
+                color: var(--color-text-primary);
+                display: flex;
+                justify-content: center;
+                min-height: 100vh;
+            }
+
+            .sr-only {
+                position: absolute;
+                width: 1px;
+                height: 1px;
+                padding: 0;
+                margin: -1px;
+                overflow: hidden;
+                clip: rect(0, 0, 0, 0);
+                border: 0;
+            }
+
+            .wrap {
+                width: 100%;
+                max-width: 800px;
+                padding: 2rem 1.5rem;
+            }
+
+            .tl {
+                padding: 1.5rem 0;
+            }
+            .nav {
+                display: flex;
+                gap: 6px;
+                margin-bottom: 1.5rem;
+                flex-wrap: wrap;
+            }
+            .nb {
+                padding: 8px 16px;
+                border-radius: var(--border-radius-md);
+                border: 0.5px solid var(--color-border-secondary);
+                background: transparent;
+                cursor: pointer;
+                font-size: 16px;
+                color: var(--color-text-secondary);
+                font-family: var(--font-sans);
+                white-space: nowrap;
+                transition: all 0.2s;
+            }
+            .nb:hover {
+                background: var(--color-background-secondary);
+            }
+            .nb.on {
+                background: var(--color-background-secondary);
+                color: var(--color-text-primary);
+                border-color: var(--color-border-primary);
+                font-weight: 500;
+            }
+
+            .era {
+                display: none;
+                animation: fadeIn 0.3s ease;
+            }
+            .era.on {
+                display: block;
+            }
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(5px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            .era-header {
+                display: flex;
+                align-items: baseline;
+                gap: 12px;
+                margin-bottom: 1rem;
+                padding-bottom: 1rem;
+                border-bottom: 0.5px solid var(--color-border-tertiary);
+            }
+            .era-year {
+                font-size: 30px;
+                font-weight: 500;
+                color: var(--color-text-primary);
+            }
+            .era-title {
+                font-size: 17px;
+                color: var(--color-text-secondary);
+            }
+
+            .card {
+                background: var(--color-background-primary);
+                border: 0.5px solid var(--color-border-tertiary);
+                border-radius: var(--border-radius-lg);
+                padding: 1rem 1.25rem;
+                margin-bottom: 10px;
+            }
+            .card-title {
+                font-size: 16px;
+                font-weight: 500;
+                color: var(--color-text-primary);
+                margin-bottom: 6px;
+            }
+            .card-body {
+                font-size: 16px;
+                color: var(--color-text-secondary);
+                line-height: 1.65;
+            }
+
+            .pill {
+                display: inline-block;
+                font-size: 16px;
+                padding: 3px 8px;
+                border-radius: var(--border-radius-md);
+                font-weight: 500;
+                margin-right: 6px;
+                margin-bottom: 6px;
+            }
+            .p-purple {
+                background: #4c1d95;
+                color: #ddd6fe;
+            }
+            .p-teal {
+                background: #115e59;
+                color: #ccfbf1;
+            }
+            .p-amber {
+                background: #78350f;
+                color: #fde68a;
+            }
+            .p-coral {
+                background: #7f1d1d;
+                color: #fecaca;
+            }
+            .p-blue {
+                background: #1e3a8a;
+                color: #bfdbfe;
+            }
+            .p-green {
+                background: #14532d;
+                color: #bbf7d0;
+            }
+            .p-gray {
+                background: #3f3f46;
+                color: #e4e4e7;
+            }
+
+            .screen {
+                background: #1a1a2e;
+                border-radius: var(--border-radius-md);
+                padding: 1rem 1.25rem;
+                font-family: var(--font-mono);
+                font-size: 16px;
+                margin: 10px 0;
+                color: #d1d5db;
+                line-height: 1.7;
+                border: 0.5px solid #2d2d4e;
+            }
+            .screen .g {
+                color: #28c840;
+            }
+            .screen .y {
+                color: #fde68a;
+            }
+            .screen .b {
+                color: #93c5fd;
+            }
+            .screen .r {
+                color: #f9a8d4;
+            }
+            .screen .dim {
+                color: #6b7280;
+            }
+
+            .grid2 {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+                gap: 10px;
+            }
+
+            /* ======== MELHORIAS NA BARRA HORIZONTAL ======== */
+            .timeline-bar {
+                display: flex;
+                align-items: center;
+                gap: 0;
+                margin: 1.5rem 0 2rem 0;
+                overflow-x: auto;
+                padding-bottom: 12px;
+                scroll-behavior: smooth;
+            }
+
+            /* Scrollbar Customizada */
+            .timeline-bar::-webkit-scrollbar {
+                height: 6px;
+            }
+            .timeline-bar::-webkit-scrollbar-track {
+                background: var(--color-background-primary);
+                border-radius: 10px;
+            }
+            .timeline-bar::-webkit-scrollbar-thumb {
+                background: var(--color-border-primary);
+                border-radius: 10px;
+            }
+            .timeline-bar::-webkit-scrollbar-thumb:hover {
+                background: var(--color-text-tertiary);
+            }
+
+            .tbar-item {
+                padding-top: 5px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                cursor: pointer;
+                min-width: 70px;
+            }
+            .tbar-dot {
+                width: 16px;
+                height: 16px;
+                border-radius: 50%;
+                border: 2px solid var(--color-border-secondary);
+                background: var(--color-background-primary);
+                transition: all 0.3s ease;
+                position: relative;
+                z-index: 2;
+            }
+            .tbar-dot.on {
+                background: #3b82f6;
+                border-color: #60a5fa;
+                transform: scale(1.2); /* Fica ligeiramente maior */
+            }
+            .tbar-dot.done {
+                background: #10b981;
+                border-color: #34d399;
+            }
+            .tbar-line {
+                flex: 1;
+                height: 3px;
+                background: var(--color-border-tertiary);
+                min-width: 30px;
+                position: relative;
+                z-index: 1;
+            }
+            .tbar-line.done {
+                background: #10b981;
+            }
+            .tbar-label {
+                font-size: 16px;
+                color: var(--color-text-tertiary);
+                margin-top: 8px;
+                text-align: center;
+                transition: color 0.3s ease;
+            }
+            .tbar-label.on {
+                color: var(--color-text-primary);
+                font-weight: 600;
+            }
+            /* =============================================== */
+
+            .connection {
+                background: var(--color-background-secondary);
+                border-left: 3px solid #3b82f6;
+                border-radius: 0 var(--border-radius-md) var(--border-radius-md) 0;
+                padding: 1rem 1.25rem;
+                font-size: 15px;
+                color: var(--color-text-secondary);
+                margin-top: 10px;
+                line-height: 1.6;
+            }
+            .connection strong {
+                color: var(--color-text-primary);
+            }
+
+            .nav-btns {
+                display: flex;
+                gap: 8px;
+                margin-top: 1.5rem;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .nav-btns button {
+                padding: 10px 20px;
+                border-radius: var(--border-radius-md);
+                border: 0.5px solid var(--color-border-secondary);
+                background: transparent;
+                cursor: pointer;
+                font-size: 15px;
+                color: var(--color-text-secondary);
+                font-family: var(--font-sans);
+                transition: all 0.2s;
+            }
+            .nav-btns button:hover {
+                background: var(--color-background-secondary);
+                color: var(--color-text-primary);
+            }
+            .nav-btns button.primary {
+                background: #1e3a8a;
+                color: #bfdbfe;
+                border-color: #3b82f6;
+                font-weight: 500;
+            }
+            .nav-btns button.primary:hover {
+                background: #1e40af;
+            }
+            .progress {
+                font-size: 16px;
+                color: var(--color-text-tertiary);
+                text-align: center;
+            }
+
+            @media (max-width: 500px) {
+                .era-header {
+                    flex-direction: column;
+                    gap: 4px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <h2 class="sr-only">Linha do tempo interativa da história do terminal e da web, do UNIX até o Comentaaê</h2>
+
+        <div class="wrap">
+            <div class="tl">
+                <div class="timeline-bar" id="tbar"></div>
+                <div id="eras"></div>
+            </div>
+        </div>
+
+        <script>
+            const eras = [
+                {
+                    year: "1969",
+                    title: "o terminal nasce — UNIX e o início de tudo",
+                    pills: [
+                        { t: "UNIX", c: "p-purple" },
+                        { t: "Bell Labs", c: "p-gray" },
+                        { t: "terminal físico", c: "p-gray" },
+                    ],
+                    cards: [
+                        {
+                            title: "o que era o computador em 1969",
+                            body: "Computadores ocupavam salas inteiras. Não existia mouse, não existia tela gráfica. A única forma de dar instruções era digitando texto num terminal físico — um teclado conectado a uma impressora ou tela monocromática verde.",
+                        },
+                        {
+                            title: "o terminal como única interface",
+                            body: "Os engenheiros da Bell Labs criaram o UNIX — um sistema operacional onde tudo era controlado por comandos de texto. Cada comando era uma instrução precisa: copiar arquivo, mover pasta, executar programa. O ENTER executava.",
+                        },
+                        {
+                            screen: true,
+                            lines: [
+                                { t: "dim", v: "$ " },
+                                { t: "b", v: "ls" },
+                                { t: "dim", v: " -la" },
+                                { t: "", v: "" },
+                                { t: "g", v: "drwxr-xr-x  /home/usuario" },
+                                { t: "g", v: "-rw-r--r--  programa.c" },
+                                { t: "dim", v: "$ " },
+                                { t: "b", v: "gcc" },
+                                { t: "y", v: " programa.c" },
+                                { t: "dim", v: " -o programa" },
+                                { t: "dim", v: "$ " },
+                                { t: "b", v: "./programa" },
+                                { t: "g", v: "Hello, World!" },
+                            ],
+                        },
+                        {
+                            title: "por que isso importa para o Comentaaê",
+                            body: "O terminal que você usa hoje para digitar 'docker compose up -d' é o bisneto direto desse terminal de 1969. A lógica é idêntica — você digita, o sistema executa. Só a tela mudou.",
+                        },
+                    ],
+                    connection:
+                        "O UNIX criou a filosofia que persiste até hoje: cada programa faz uma coisa bem feita. docker faz containers, mysql faz banco, node faz servidor. Você os conecta no terminal — exatamente como os engenheiros da Bell Labs faziam em 1969.",
+                },
+
+                {
+                    year: "1991",
+                    title: "a internet chega ao público — HTML e o primeiro site",
+                    pills: [
+                        { t: "Tim Berners-Lee", c: "p-teal" },
+                        { t: "HTML", c: "p-amber" },
+                        { t: "HTTP", c: "p-amber" },
+                        { t: "CERN", c: "p-gray" },
+                    ],
+                    cards: [
+                        {
+                            title: "o problema que o HTML resolveu",
+                            body: "Tim Berners-Lee era físico no CERN e precisava compartilhar documentos com colegas em diferentes países. Inventou o HTML — uma linguagem de marcação simples que qualquer computador poderia interpretar e exibir.",
+                        },
+                        {
+                            title: "o primeiro site da história",
+                            body: "Em 1991, o primeiro site foi publicado em info.cern.ch. Era texto puro com links. Sem imagens, sem cores, sem JavaScript. Uma página HTML era um arquivo de texto com tags que o navegador interpretava e renderizava.",
+                        },
+                        {
+                            screen: true,
+                            lines: [
+                                { t: "y", v: "<html>" },
+                                { t: "y", v: "  <body>" },
+                                { t: "g", v: "    <h1>" },
+                                { t: "", v: "World Wide Web" },
+                                { t: "g", v: "</h1>" },
+                                { t: "", v: "    <p>The WorldWideWeb browser</p>" },
+                                { t: "b", v: "    <a href=" },
+                                { t: "r", v: '"http://info.cern.ch"' },
+                                { t: "b", v: ">" },
+                                { t: "", v: "      Next" },
+                                { t: "b", v: "</a>" },
+                                { t: "y", v: "  </body>" },
+                                { t: "y", v: "</html>" },
+                            ],
+                        },
+                        {
+                            title: "conexão com o Comentaaê",
+                            body: "Seus arquivos .hbs do Handlebars são HTML com superpoderes — o servidor preenche os dados antes de enviar. O HTML de 1991 e o HTML do Comentaaê seguem a mesma lógica: tags que o browser interpreta e transforma em interface visual.",
+                        },
+                    ],
+                    connection:
+                        "O protocolo HTTP criado por Berners-Lee é o mesmo que o Comentaaê usa. Quando um usuário acessa /feed, o browser envia um HTTP GET para o Express, que responde com HTML — o mesmo protocolo de 1991, 34 anos depois.",
+                },
+
+                {
+                    year: "1994",
+                    title: "Netscape — o browser que popularizou a internet",
+                    pills: [
+                        { t: "Netscape Navigator", c: "p-blue" },
+                        { t: "Marc Andreessen", c: "p-gray" },
+                        { t: "SSL", c: "p-teal" },
+                        { t: "cookies", c: "p-amber" },
+                    ],
+                    cards: [
+                        {
+                            title: "o que o Netscape mudou",
+                            body: "Antes do Netscape, a internet era usada só por universidades e militares. Marc Andreessen criou o Netscape Navigator em 1994 — o primeiro browser com interface gráfica acessível para o público geral. Qualquer pessoa podia usar sem saber comandos.",
+                        },
+                        {
+                            title: "as invenções do Netscape que usamos até hoje",
+                            body: "O Netscape inventou o SSL (o protocolo que virou o HTTPS que você configura no Comentaaê), os cookies de sessão (o mecanismo que você usa com express-session + Redis), e foi o primeiro browser a exibir imagens inline no texto.",
+                        },
+                        {
+                            title: "a guerra dos browsers",
+                            body: "A Microsoft respondeu com o Internet Explorer embutido no Windows 95. A 'guerra dos browsers' durou anos e fragmentou o desenvolvimento web — cada browser interpretava HTML de forma diferente. Foi o caos que levou à padronização do W3C.",
+                        },
+                        {
+                            title: "conexão com o Comentaaê",
+                            body: "O SESSION_SECRET no seu .env e o connect-redis no package.json existem por causa do Netscape. Cookies de sessão são uma invenção de 1994 que ainda alimenta a autenticação de toda plataforma web em 2026.",
+                        },
+                    ],
+                    connection:
+                        "O SSL que o Netscape inventou em 1994 é o TLS que você configurou nos certificados mysql/certs/. A linha é direta: Netscape → SSL → TLS 1.3 → suas conexões MySQL criptografadas.",
+                },
+
+                {
+                    year: "1995",
+                    title: "JavaScript nasce em 10 dias — a web ganha comportamento",
+                    pills: [
+                        { t: "Brendan Eich", c: "p-amber" },
+                        { t: "JavaScript", c: "p-amber" },
+                        { t: "Netscape", c: "p-blue" },
+                        { t: "LiveScript", c: "p-gray" },
+                    ],
+                    cards: [
+                        {
+                            title: "o problema que o JavaScript resolveu",
+                            body: "O HTML era estático — uma vez carregado, não mudava. Para qualquer interação o usuário precisava recarregar a página inteira. O Netscape queria uma linguagem simples que rodasse no browser e tornasse as páginas dinâmicas.",
+                        },
+                        {
+                            title: "criado em 10 dias",
+                            body: "Brendan Eich criou o JavaScript em maio de 1995 em apenas 10 dias. Chamava-se LiveScript, mas foi renomeado para JavaScript por marketing — para pegar carona na popularidade do Java da Sun Microsystems. As duas linguagens não têm relação.",
+                        },
+                        {
+                            screen: true,
+                            lines: [
+                                { t: "dim", v: "// 1995 — primeiro JavaScript da história" },
+                                { t: "b", v: "document" },
+                                { t: "", v: ".write(" },
+                                { t: "r", v: '"Olá, "' },
+                                { t: "", v: " + " },
+                                { t: "b", v: "prompt" },
+                                { t: "", v: "(" },
+                                { t: "r", v: '"Seu nome?"' },
+                                { t: "", v: ") + " },
+                                { t: "r", v: '"!"' },
+                                { t: "", v: ");" },
+                            ],
+                        },
+                        {
+                            title: "conexão com o Comentaaê",
+                            body: "O JavaScript que roda no browser do usuário do Comentaaê fazendo Fetch API para curtir posts é o mesmo JavaScript de 1995 — evoluído, padronizado, mas com a mesma lógica de manipular a página sem recarregar.",
+                        },
+                    ],
+                    connection:
+                        "O Node.js que roda seu server.js usa o motor V8 do Chrome para executar JavaScript no servidor. Brendan Eich criou a linguagem para o browser em 1995. Ryan Dahl a levou para o servidor em 2009. Você usa os dois no Comentaaê.",
+                },
+
+                {
+                    year: "1999",
+                    title: "a era das bolhas — CGI, PHP e as primeiras aplicações web",
+                    pills: [
+                        { t: "PHP", c: "p-purple" },
+                        { t: "CGI", c: "p-gray" },
+                        { t: "MySQL", c: "p-teal" },
+                        { t: "LAMP stack", c: "p-green" },
+                    ],
+                    cards: [
+                        {
+                            title: "o problema do HTML estático",
+                            body: "Sites em HTML puro mostravam sempre o mesmo conteúdo para todos. Para criar fóruns, lojas e redes sociais os desenvolvedores precisavam gerar HTML dinamicamente — diferente para cada usuário, com dados do banco.",
+                        },
+                        {
+                            title: "a stack LAMP domina a web",
+                            body: "Linux + Apache + MySQL + PHP se tornou a combinação padrão. O servidor recebia uma requisição, o PHP buscava dados no MySQL, gerava o HTML e enviava para o browser. Era Server-Side Rendering — o mesmo que seu Express com Handlebars faz hoje.",
+                        },
+                        {
+                            screen: true,
+                            lines: [
+                                { t: "dim", v: "<?php" },
+                                { t: "dim", v: "// PHP 1999 — SSR manual" },
+                                { t: "b", v: "$result" },
+                                { t: "", v: " = mysql_query(" },
+                                { t: "r", v: '"SELECT * FROM posts"' },
+                                { t: "", v: ");" },
+                                { t: "", v: "while(" },
+                                { t: "b", v: "$row" },
+                                { t: "", v: " = mysql_fetch_array(" },
+                                { t: "b", v: "$result" },
+                                { t: "", v: ")) {" },
+                                { t: "g", v: '  echo "<h1>" . $row["titulo"] . "</h1>";' },
+                                { t: "", v: "}" },
+                            ],
+                        },
+                        {
+                            title: "o MySQL nasce aqui",
+                            body: "O MySQL foi criado em 1995 pelos suecos Michael Widenius e David Axmark. Em 1999 já era o banco dominante da web por ser gratuito e rápido. É o mesmo MySQL 8.0 rodando nos seus containers mysql_master e mysql_replica.",
+                        },
+                    ],
+                    connection:
+                        "O MySQL que você usa no Comentaaê tem 29 anos. A lógica de 'busca dados no banco → gera HTML → envia para o browser' que o PHP fazia em 1999 é exatamente o que o Express com Handlebars faz no seu server.js hoje.",
+                },
+
+                {
+                    year: "2004",
+                    title: "Web 2.0 — usuários criam conteúdo, nasce o feed",
+                    pills: [
+                        { t: "AJAX", c: "p-blue" },
+                        { t: "Gmail", c: "p-coral" },
+                        { t: "Facebook", c: "p-blue" },
+                        { t: "XMLHttpRequest", c: "p-gray" },
+                    ],
+                    cards: [
+                        {
+                            title: "a grande virada — AJAX",
+                            body: "Em 2004 o Google lançou o Gmail com uma técnica revolucionária: a página atualizava sem recarregar. Usava XMLHttpRequest — a ancestral direta do Fetch API do Comentaaê — para buscar emails em background enquanto o usuário lia.",
+                        },
+                        {
+                            title: "Facebook nasce em 2004",
+                            body: "Mark Zuckerberg lançou o thefacebook.com em fevereiro de 2004 para estudantes de Harvard. Era PHP + MySQL rodando num servidor comum. A mesma stack LAMP que dominava a web. O feed, o mural, as curtidas — tudo nasceu aqui.",
+                        },
+                        {
+                            screen: true,
+                            lines: [
+                                { t: "dim", v: "// AJAX 2004 — ancestral do Fetch API" },
+                                { t: "b", v: "var" },
+                                { t: "", v: " xhr = new XMLHttpRequest();" },
+                                { t: "", v: "xhr." },
+                                { t: "g", v: "open" },
+                                { t: "", v: "(" },
+                                { t: "r", v: '"GET"' },
+                                { t: "", v: ", " },
+                                { t: "r", v: '"/api/posts"' },
+                                { t: "", v: ");" },
+                                { t: "", v: "xhr." },
+                                { t: "g", v: "onload" },
+                                { t: "", v: " = function() {" },
+                                { t: "b", v: "  document" },
+                                { t: "", v: ".getElementById(" },
+                                { t: "r", v: '"feed"' },
+                                { t: "", v: ")" },
+                                { t: "", v: "    .innerHTML = xhr.responseText;" },
+                                { t: "", v: "};" },
+                                { t: "", v: "xhr." },
+                                { t: "g", v: "send" },
+                                { t: "", v: "();" },
+                            ],
+                        },
+                        {
+                            title: "conexão com o Comentaaê",
+                            body: "A arquitetura dual-URL do Comentaaê — SSR para SEO + Fetch API para interações — é a evolução direta do que o Gmail e o Facebook inventaram em 2004. SSR entrega o HTML inicial, Fetch API hidrata as interações sem recarregar.",
+                        },
+                    ],
+                    connection:
+                        "O poolLeitura que serve o feed do Comentaaê resolve o mesmo problema que o Facebook enfrentou em 2004: milhões de SELECTs simultâneos. A solução de separar leitura e escrita em servidores diferentes nasceu exatamente dessa escala.",
+                },
+
+                {
+                    year: "2009",
+                    title: "Node.js — JavaScript invade o servidor",
+                    pills: [
+                        { t: "Ryan Dahl", c: "p-green" },
+                        { t: "Node.js", c: "p-green" },
+                        { t: "V8 engine", c: "p-amber" },
+                        { t: "npm", c: "p-coral" },
+                    ],
+                    cards: [
+                        {
+                            title: "o problema que o Node resolveu",
+                            body: "Servidores web tradicionais criavam uma thread do sistema operacional para cada conexão. Com milhares de usuários simultâneos, o servidor ficava sem threads e travava. Ryan Dahl queria um servidor que gerenciasse milhares de conexões com uma única thread.",
+                        },
+                        {
+                            title: "JavaScript no servidor",
+                            body: "Em 2009 Ryan Dahl apresentou o Node.js na JSConf. Usava o motor V8 do Chrome para executar JavaScript fora do browser. Com event loop e I/O não-bloqueante, um único processo Node conseguia servir milhares de conexões simultâneas.",
+                        },
+                        {
+                            screen: true,
+                            lines: [
+                                { t: "dim", v: "// Node.js 2009 — o primeiro servidor" },
+                                { t: "b", v: "const" },
+                                { t: "", v: " http = require(" },
+                                { t: "r", v: '"http"' },
+                                { t: "", v: ");" },
+                                { t: "", v: "" },
+                                { t: "", v: "http." },
+                                { t: "g", v: "createServer" },
+                                { t: "", v: "((req, res) => {" },
+                                { t: "", v: "  res." },
+                                { t: "g", v: "writeHead" },
+                                { t: "", v: "(200);" },
+                                { t: "", v: "  res." },
+                                { t: "g", v: "end" },
+                                { t: "", v: "(" },
+                                { t: "r", v: '"Hello World"' },
+                                { t: "", v: ");" },
+                                { t: "", v: "})." },
+                                { t: "g", v: "listen" },
+                                { t: "", v: "(3000);" },
+                                { t: "g", v: "// servidor rodando — uma thread, milhares de conexões" },
+                            ],
+                        },
+                        {
+                            title: "npm nasce junto",
+                            body: "Isaac Schlueter criou o npm em 2009 como gerenciador de pacotes do Node. O package.json do seu projeto e as dependências como express, mysql2 e bcrypt que você instala são consequências diretas dessa decisão de 2009.",
+                        },
+                    ],
+                    connection:
+                        "O seu server.js roda na porta 3000 com Express — uma abstração construída em cima do Node.js de 2009. O event loop que Ryan Dahl inventou é o que permite que um único container app_posts sirva milhares de usuários do Comentaaê simultaneamente.",
+                },
+
+                {
+                    year: "2013",
+                    title: "Docker — o container que mudou o deploy para sempre",
+                    pills: [
+                        { t: "Solomon Hykes", c: "p-blue" },
+                        { t: "Docker", c: "p-blue" },
+                        { t: "container", c: "p-teal" },
+                        { t: "DotCloud", c: "p-gray" },
+                    ],
+                    cards: [
+                        {
+                            title: "o problema que o Docker resolveu",
+                            body: "'Funciona na minha máquina' era o pesadelo de todo time de desenvolvimento. Diferenças de versão de Node, MySQL, bibliotecas nativas entre o laptop do dev e o servidor de produção causavam bugs impossíveis de reproduzir.",
+                        },
+                        {
+                            title: "a demonstração que mudou tudo",
+                            body: "Em março de 2013, Solomon Hykes fez uma demo de 5 minutos na PyCon mostrando o Docker. Em vez de instalar dependências no servidor, você empacotava a aplicação inteira — código, runtime, dependências — num container isolado. Qualquer máquina rodava o mesmo ambiente.",
+                        },
+                        {
+                            screen: true,
+                            lines: [
+                                { t: "dim", v: "# Dockerfile 2013 — a ideia original" },
+                                { t: "b", v: "FROM" },
+                                { t: "", v: " ubuntu:12.04" },
+                                { t: "b", v: "RUN" },
+                                { t: "", v: " apt-get install nodejs" },
+                                { t: "b", v: "COPY" },
+                                { t: "", v: " . /app" },
+                                { t: "b", v: "CMD" },
+                                { t: "", v: " [" },
+                                { t: "r", v: '"node"' },
+                                { t: "", v: ", " },
+                                { t: "r", v: '"server.js"' },
+                                { t: "", v: "]" },
+                                { t: "g", v: "# mesma ideia do seu Dockerfile — 12 anos depois" },
+                            ],
+                        },
+                        {
+                            title: "conexão direta com o Comentaaê",
+                            body: "O seu Dockerfile com FROM node:24-alpine, COPY e CMD é a evolução direta dessa demo de 2013. O docker compose up -d que você digita todo dia nasceu nessa apresentação de 5 minutos.",
+                        },
+                    ],
+                    connection:
+                        "O seu docker-compose.yml com três serviços — app_posts, mysql_master, mysql_replica — é exatamente o problema que Docker Compose foi criado para resolver: orquestrar múltiplos containers que precisam conversar entre si.",
+                },
+
+                {
+                    year: "2026",
+                    title: "Comentaaê — onde tudo converge",
+                    pills: [
+                        { t: "Node.js 24", c: "p-green" },
+                        { t: "MySQL 8", c: "p-teal" },
+                        { t: "Docker", c: "p-blue" },
+                        { t: "SSR + Fetch", c: "p-purple" },
+                        { t: "Master/Replica", c: "p-coral" },
+                    ],
+                    cards: [
+                        {
+                            title: "cada tecnologia tem uma origem na linha do tempo",
+                            body: "O Comentaaê não usa tecnologias novas — usa a destilação de 55 anos de evolução. Cada decisão arquitetural conecta diretamente a um problema resolvido ao longo dessa história.",
+                        },
+                        {
+                            screen: true,
+                            lines: [
+                                { t: "dim", v: "# o Comentaaê em 2026" },
+                                { t: "b", v: "docker" },
+                                { t: "", v: " compose up --build -d" },
+                                { t: "" },
+                                { t: "g", v: "✓ mysql_master   Started   ← MySQL 1995" },
+                                { t: "g", v: "✓ mysql_replica  Started   ← replicação 2000s" },
+                                { t: "g", v: "✓ app_posts      Started   ← Node.js 2009" },
+                                { t: "" },
+                                { t: "b", v: "GET" },
+                                { t: "", v: " /feed          ← HTTP 1991" },
+                                { t: "b", v: "SSR" },
+                                { t: "", v: " Handlebars     ← PHP/LAMP 1999" },
+                                { t: "b", v: "Fetch API" },
+                                { t: "", v: " curtir    ← AJAX/Gmail 2004" },
+                                { t: "b", v: "express-session" },
+                                { t: "", v: "   ← cookies Netscape 1994" },
+                                { t: "b", v: "TLS" },
+                                { t: "", v: " mysql/certs    ← SSL Netscape 1994" },
+                            ],
+                        },
+                        {
+                            title: "a arquitetura dual-URL como síntese",
+                            body: "SSR para o Googlebot (herança do PHP/LAMP 1999) + Fetch API para interações humanas (herança do AJAX/Gmail 2004) + pushState para URLs limpas (herança do HTML5 2010) + Docker para deploy (2013). O Comentaaê é a composição de todas essas eras.",
+                        },
+                        {
+                            title: "o terminal que você usa hoje",
+                            body: "Quando você digita 'docker exec -it mysql_master mysql -u root -p' no PowerShell, você está usando a mesma lógica do terminal UNIX de 1969 — texto, ENTER, resposta. 55 anos de evolução, mesma filosofia fundamental.",
+                        },
+                    ],
+                    connection:
+                        "Você não está apenas construindo uma rede social — está operando a síntese de 55 anos de engenharia de software. Cada linha do seu código tem uma história que começa em 1969.",
+                },
+            ];
+
+            let cur = 0;
+
+            function buildBar() {
+                const bar = document.getElementById("tbar");
+                bar.innerHTML = "";
+                eras.forEach((e, i) => {
+                    if (i > 0) {
+                        const line = document.createElement("div");
+                        line.className = "tbar-line" + (i <= cur ? " done" : "");
+                        bar.appendChild(line);
+                    }
+                    const wrap = document.createElement("div");
+                    wrap.className = "tbar-item";
+                    wrap.onclick = () => go(i);
+                    const dot = document.createElement("div");
+                    dot.className = "tbar-dot" + (i === cur ? " on" : i < cur ? " done" : "");
+                    const lbl = document.createElement("div");
+                    lbl.className = "tbar-label" + (i === cur ? " on" : "");
+                    lbl.textContent = e.year;
+                    wrap.appendChild(dot);
+                    wrap.appendChild(lbl);
+                    bar.appendChild(wrap);
+                });
+            }
+
+            function buildEra(e, i) {
+                const div = document.createElement("div");
+                div.className = "era" + (i === 0 ? " on" : "");
+                div.id = "era" + i;
+
+                let html = `<div class="era-header"><span class="era-year">${e.year}</span><span class="era-title">${e.title}</span></div>`;
+                html += `<div style="margin-bottom:12px">${e.pills.map((p) => `<span class="pill ${p.c}">${p.t}</span>`).join("")}</div>`;
+
+                e.cards.forEach((c) => {
+                    if (c.screen) {
+                        html += `<div class="screen">`;
+                        c.lines.forEach((l) => {
+                            if (l.v === "") {
+                                html += `<br>`;
+                                return;
+                            }
+                            html += `<span class="${l.t}">${l.v}</span>`;
+                            if (l.t === "dim" && !l.v.endsWith(" ") && c.lines.indexOf(l) < c.lines.length - 1) {
+                                const next = c.lines[c.lines.indexOf(l) + 1];
+                                if (next && next.v !== "") html += "";
+                            }
+                        });
+                        html += `</div>`;
+                    } else {
+                        html += `<div class="card"><div class="card-title">${c.title}</div><div class="card-body">${c.body}</div></div>`;
+                    }
+                });
+
+                html += `<div class="connection">${e.connection}</div>`;
+                html += `<div class="nav-btns">`;
+                html += `<button onclick="go(${i - 1})" ${i === 0 ? 'style="visibility:hidden"' : ""}>← anterior</button>`;
+                html += `<span class="progress">${i + 1} / ${eras.length}</span>`;
+                if (i < eras.length - 1) {
+                    html += `<button class="primary" onclick="go(${i + 1})">próxima era →</button>`;
+                } else {
+                    html += `<button class="primary" onclick="sendPrompt('Quero começar a construir as rotas, controllers e models do Comentaaê')">começar a construir ↗</button>`;
+                }
+                html += `</div>`;
+
+                div.innerHTML = html;
+                return div;
+            }
+
+            function go(i) {
+                if (i < 0 || i >= eras.length) return;
+                document.querySelectorAll(".era").forEach((e) => e.classList.remove("on"));
+                document.getElementById("era" + i).classList.add("on");
+                cur = i;
+                buildBar();
+
+                // Rola a barra horizontal para centralizar o item clicado
+                const bar = document.getElementById("tbar");
+                const items = bar.querySelectorAll(".tbar-item");
+                if (items[i]) {
+                    items[i].scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+                }
+            }
+
+            const container = document.getElementById("eras");
+            eras.forEach((e, i) => container.appendChild(buildEra(e, i)));
+            buildBar();
+
+            function sendPrompt(text) {
+                console.log("Comando final clicado:", text);
+            }
+        </script>
+    </body>
+</html>

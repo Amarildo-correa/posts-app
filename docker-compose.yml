@@ -17,7 +17,7 @@ services: # Define o início da lista de serviços (containers) que compõem a a
         build: # Define as instruções de construção da imagem customizada.
             context: . # Define o diretório atual como contexto para o Docker.
             dockerfile: Dockerfile # Aponta para o arquivo com as instruções de instalação do Node.js e dependências.
-        container_name: app_posts # Nome fixo para o container facilitando a identificação.
+        container_name: servidor_node # Nome fixo para o container facilitando a identificação.
         restart: unless-stopped # Reinicia o container automaticamente, exceto se for parado manualmente.
         environment: # Bloco de variáveis de ambiente injetadas no Node.js.
             DB_HOST_MASTER: mysql_master # Define o endpoint para operações de escrita (Insert/Update/Delete).

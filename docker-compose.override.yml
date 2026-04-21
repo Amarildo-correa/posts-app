@@ -36,11 +36,11 @@ services:
         # em produção nunca se monta código do disco no container
         # a imagem carrega o código via COPY . . (Dockerfile) — imutável e autossuficiente
         volumes:
-            - .:/app             # hot reload — código do notebook no container
-            - /app/node_modules  # protege o node_modules compilado pro Linux Alpine
-                                 # sem esse volume anônimo o Windows sobrescreveria
-                                 # o node_modules do Linux com binários incompatíveis
-                                 # bcrypt e outros módulos nativos quebrariam
+            - .:/app                                    # hot reload — código do notebook no container
+            - node_modules:/app/node_modules  # volume NOMEADO → rotege o node_modules compilado pro Linux Alpine
+                                                        # sem esse volume anônimo o Windows sobrescreveria
+                                                        # o node_modules do Linux com binários incompatíveis
+                                                        # bcrypt e outros módulos nativos quebrariam
 
         # executa em sequência — ordem obrigatória:
         # 1. setup-replication: configura Master/Replica (idempotente — pula se já feito)
@@ -69,3 +69,9 @@ services:
             - --server-id=2
             - --relay-log=mysql-relay-bin
             - --read-only=ON
+
+# ── VOLUMES NOMEADOS — exclusivos do desenvolvimento ──────────
+# top-level volumes sempre no final — depois de todos os services
+# posts-app_node_modules → preserva node_modules compilado pro Linux Alpine
+volumes:
+    node_modules:    # Docker adiciona prefixo do projeto automaticamente → posts-app_node_modules

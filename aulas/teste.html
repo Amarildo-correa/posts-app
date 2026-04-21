@@ -1,0 +1,273 @@
+<style>
+    @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap");
+
+    :root {
+        --bg: #0d0f1a;
+        --bg2: #131625;
+        --bg3: #1a1d2e;
+        --bg4: #1e2235;
+        --border: #2a2d3e;
+        --border2: #3a3d52;
+        --text: #e2e4f0;
+        --text2: #9ca3af;
+        --text3: #6b7280;
+        --purple: #818cf8;
+        --purple2: #a5b4fc;
+        --cyan: #06b6d4;
+        --cyan2: #67e8f9;
+        --green: #34d399;
+        --green2: #6ee7b7;
+        --amber: #f59e0b;
+        --amber2: #fbbf24;
+        --red: #ef4444;
+        --red2: #fca5a5;
+        --pink: #ec4899;
+        --mono: "JetBrains Mono", monospace;
+        --sans: "Inter", sans-serif;
+    }
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sans);
+        min-height: 100vh;
+        padding: 2rem 1rem 4rem;
+    }
+
+    /* ── HEADER ── */
+    .header {
+        max-width: 900px;
+        margin: 0 auto 2rem;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 1.5rem;
+    }
+    .header-badge {
+        display: inline-block;
+        font-family: var(--mono);
+        font-size: 16px;
+        color: var(--cyan2);
+        background: rgba(6, 182, 212, 0.1);
+        border: 1px solid rgba(6, 182, 212, 0.25);
+        padding: 3px 10px;
+        border-radius: 20px;
+        margin-bottom: 0.75rem;
+        letter-spacing: 0.05em;
+    }
+    h1 {
+        font-size: 22px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        margin-bottom: 0.4rem;
+    }
+    .header p {
+        font-size: 16px;
+        color: var(--text3);
+        line-height: 1.6;
+    }
+
+    /* ── TABS ── */
+    .page {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .tabs {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+    }
+    .tab {
+        padding: 7px 14px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--text3);
+        font-family: var(--mono);
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+    }
+    .tab:hover {
+        background: var(--bg3);
+        color: var(--text2);
+    }
+    .tab.on {
+        background: var(--bg4);
+        color: var(--purple2);
+        border-color: rgba(129, 140, 248, 0.4);
+    }
+
+    /* ── SCENE ── */
+    .scene {
+        display: none;
+        animation: fin 0.3s ease;
+    }
+    .scene.on {
+        display: block;
+    }
+    @keyframes fin {
+        from {
+            opacity: 0;
+            transform: translateY(8px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* ── SVG CONTAINER ── */
+    .svg-wrap {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 1rem;
+    }
+    .svg-wrap svg {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+
+    /* ── INFO CARD ── */
+    .info {
+        background: var(--bg3);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 1rem;
+    }
+    .info-title {
+        font-family: var(--mono);
+        font-size: 16px;
+        font-weight: 500;
+        color: var(--purple2);
+        margin-bottom: 0.6rem;
+    }
+    .info-body {
+        font-size: 16px;
+        color: var(--text2);
+        line-height: 1.75;
+    }
+    .info-body code {
+        font-family: var(--mono);
+        font-size: 16px;
+        color: var(--amber2);
+        background: rgba(251, 191, 36, 0.08);
+        padding: 1px 5px;
+        border-radius: 4px;
+    }
+
+    /* ── METRICS ── */
+    .metrics {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-bottom: 1.5rem;
+    }
+    .metric {
+        background: var(--bg3);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 1rem;
+        text-align: center;
+    }
+    .metric-val {
+        font-family: var(--mono);
+        font-size: 18px;
+        font-weight: 500;
+        margin-bottom: 4px;
+    }
+    .metric-lbl {
+        font-size: 16px;
+        color: var(--text3);
+    }
+    .m-net {
+        color: var(--cyan);
+    }
+    .m-proc {
+        color: var(--green);
+    }
+    .m-total {
+        color: var(--amber);
+    }
+
+    /* ── NAV BUTTONS ── */
+    .nav-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 0.5rem;
+    }
+    .nav-row button {
+        padding: 8px 18px;
+        border-radius: 8px;
+        border: 1px solid var(--border2);
+        background: transparent;
+        color: var(--text2);
+        font-family: var(--mono);
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .nav-row button:hover {
+        background: var(--bg3);
+        color: var(--text);
+    }
+    .nav-row button.primary {
+        background: rgba(129, 140, 248, 0.12);
+        color: var(--purple2);
+        border-color: rgba(129, 140, 248, 0.35);
+    }
+    .nav-row .counter {
+        font-family: var(--mono);
+        font-size: 16px;
+        color: var(--text3);
+    }
+
+    /* ── LEGEND ── */
+    .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin-bottom: 1.5rem;
+    }
+    .leg {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 16px;
+        color: var(--text3);
+    }
+    .leg-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    /* ── ANIMATE DASH ── */
+    @keyframes dash {
+        to {
+            stroke-dashoffset: 0;
+        }
+    }
+    .anim-line {
+        animation: dash 1.2s linear infinite;
+    }
+
+    @media (max-width: 600px) {
+        .metrics {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+</style>

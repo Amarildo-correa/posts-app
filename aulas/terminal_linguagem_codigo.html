@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Guia Interativo de Terminal</title>
+        <style>
+            :root {
+                /* Variáveis de Tema Escuro */
+                --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                --font-mono: "Menlo", "Monaco", "Consolas", "Courier New", monospace;
+
+                --color-background-base: #0f1115;
+                --color-background-primary: #181a20;
+                --color-background-secondary: #22252e;
+
+                --color-border-primary: #52525b;
+                --color-border-secondary: #3f3f46;
+                --color-border-tertiary: #27272a;
+
+                --color-text-primary: #f4f4f5;
+                --color-text-secondary: #a1a1aa;
+                --color-text-tertiary: #71717a;
+
+                --border-radius-md: 6px;
+                --border-radius-lg: 10px;
+            }
+
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            body {
+                background-color: var(--color-background-base);
+                color: var(--color-text-primary);
+                display: flex;
+                justify-content: center;
+                min-height: 100vh;
+            }
+
+            .wrap {
+                width: 100%;
+                max-width: 800px;
+                padding: 2rem 1.5rem;
+                font-family: var(--font-sans);
+            }
+
+            .sr-only {
+                position: absolute;
+                width: 1px;
+                height: 1px;
+                padding: 0;
+                margin: -1px;
+                overflow: hidden;
+                clip: rect(0, 0, 0, 0);
+                border: 0;
+            }
+
+            .tabs {
+                display: flex;
+                gap: 6px;
+                margin-bottom: 1.5rem;
+                flex-wrap: wrap;
+            }
+            .tab {
+                padding: 7px 16px;
+                border-radius: var(--border-radius-md);
+                border: 0.5px solid var(--color-border-secondary);
+                background: transparent;
+                cursor: pointer;
+                font-size: 14px;
+                color: var(--color-text-secondary);
+                font-family: var(--font-sans);
+                transition: all 0.2s;
+            }
+            .tab:hover {
+                background: var(--color-background-secondary);
+            }
+            .tab.on {
+                background: var(--color-background-secondary);
+                color: var(--color-text-primary);
+                border-color: var(--color-border-primary);
+                font-weight: 500;
+            }
+
+            .panel {
+                display: none;
+                animation: fadeIn 0.3s ease;
+            }
+            .panel.on {
+                display: block;
+            }
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(5px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            .card {
+                background: var(--color-background-primary);
+                border: 0.5px solid var(--color-border-tertiary);
+                border-radius: var(--border-radius-lg);
+                padding: 1rem 1.25rem;
+                margin-bottom: 10px;
+            }
+
+            .term {
+                background: #1a1a2e;
+                border-radius: var(--border-radius-md);
+                padding: 1rem 1.25rem;
+                font-family: var(--font-mono);
+                font-size: 14px;
+                margin: 10px 0;
+                position: relative;
+            }
+            .term-bar {
+                display: flex;
+                gap: 5px;
+                margin-bottom: 10px;
+            }
+            .dot {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+            }
+            .d1 {
+                background: #ff5f57;
+            }
+            .d2 {
+                background: #febc2e;
+            }
+            .d3 {
+                background: #28c840;
+            }
+
+            .prompt {
+                color: #7dd3a8;
+            }
+            .cmd {
+                color: #93c5fd;
+            }
+            .arg {
+                color: #fde68a;
+            }
+            .flag {
+                color: #f9a8d4;
+            }
+            .file {
+                color: #c4b5fd;
+            }
+            .comment {
+                color: #6b7280;
+                font-style: italic;
+            }
+            .output {
+                color: #d1d5db;
+                margin-top: 6px;
+                padding-top: 6px;
+                border-top: 0.5px solid #2d2d4e;
+            }
+
+            .label {
+                font-size: 12px;
+                font-weight: 500;
+                letter-spacing: 0.05em;
+                color: var(--color-text-tertiary);
+                text-transform: uppercase;
+                margin-bottom: 8px;
+            }
+            .row {
+                display: flex;
+                gap: 8px;
+                align-items: flex-start;
+                margin-bottom: 8px;
+            }
+
+            /* Ajuste de cores das pills para o tema escuro */
+            .pill {
+                font-size: 12px;
+                padding: 4px 8px;
+                border-radius: var(--border-radius-md);
+                white-space: nowrap;
+                font-weight: 500;
+            }
+            .p-blue {
+                background: #1e3a8a;
+                color: #bfdbfe;
+            }
+            .p-green {
+                background: #14532d;
+                color: #bbf7d0;
+            }
+            .p-amber {
+                background: #78350f;
+                color: #fde68a;
+            }
+            .p-coral {
+                background: #7f1d1d;
+                color: #fecaca;
+            }
+            .p-purple {
+                background: #4c1d95;
+                color: #ddd6fe;
+            }
+
+            .desc {
+                font-size: 15px;
+                color: var(--color-text-secondary);
+                line-height: 1.6;
+            }
+            .title {
+                font-size: 17px;
+                font-weight: 500;
+                color: var(--color-text-primary);
+                margin-bottom: 4px;
+            }
+            .grid2 {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+            .arrow {
+                text-align: center;
+                color: var(--color-text-tertiary);
+                font-size: 14px;
+                padding: 4px 0;
+            }
+            .eq {
+                background: var(--color-background-secondary);
+                border-radius: var(--border-radius-md);
+                padding: 0.75rem 1rem;
+                margin: 10px 0;
+                font-size: 15px;
+                color: var(--color-text-secondary);
+            }
+            .eq strong {
+                color: var(--color-text-primary);
+            }
+
+            .quiz-opt {
+                padding: 8px 12px;
+                border-radius: var(--border-radius-md);
+                border: 0.5px solid var(--color-border-secondary);
+                background: transparent;
+                cursor: pointer;
+                font-size: 15px;
+                color: var(--color-text-primary);
+                text-align: left;
+                width: 100%;
+                margin-bottom: 6px;
+                font-family: var(--font-sans);
+                transition: all 0.2s;
+            }
+            .quiz-opt:hover {
+                background: var(--color-background-secondary);
+            }
+            /* Ajuste de cores de feedback do quiz para tema escuro */
+            .quiz-opt.certa {
+                border-color: #22c55e;
+                background: #14532d;
+                color: #bbf7d0;
+            }
+            .quiz-opt.errada {
+                border-color: #ef4444;
+                background: #7f1d1d;
+                color: #fecaca;
+            }
+            .feedback {
+                font-size: 14px;
+                padding: 8px 12px;
+                border-radius: var(--border-radius-md);
+                margin-top: 8px;
+                display: none;
+            }
+            .fb-ok {
+                background: #14532d;
+                color: #bbf7d0;
+            }
+            .fb-err {
+                background: #7f1d1d;
+                color: #fecaca;
+            }
+
+            @media (max-width: 500px) {
+                .grid2 {
+                    grid-template-columns: 1fr;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <h2 class="sr-only">Guia interativo sobre terminal, linguagens e comandos para desenvolvedores iniciantes</h2>
+
+        <div class="wrap">
+            <div class="tabs">
+                <button class="tab on" onclick="go(0)">O que é o terminal</button>
+                <button class="tab" onclick="go(1)">Anatomia de um comando</button>
+                <button class="tab" onclick="go(2)">Linguagens e extensões</button>
+                <button class="tab" onclick="go(3)">Terminal vs arquivo</button>
+                <button class="tab" onclick="go(4)">Quiz</button>
+            </div>
+
+            <div class="panel on" id="p0">
+                <div class="card">
+                    <div class="label">conceito</div>
+                    <div class="title">O terminal é uma interface de texto para o sistema operacional</div>
+                    <div class="desc" style="margin-top: 6px">
+                        Tudo que você faz com o mouse em uma interface gráfica — abrir pasta, mover arquivo, iniciar programa — o terminal faz com texto e ENTER.
+                    </div>
+                </div>
+                <div class="term">
+                    <div class="term-bar">
+                        <div class="dot d1"></div>
+                        <div class="dot d2"></div>
+                        <div class="dot d3"></div>
+                    </div>
+                    <div>
+                        <span class="prompt">C:\projetos\posts-app&gt; </span><span class="cmd">docker</span> <span class="arg">compose</span> <span class="flag">up</span> <span class="flag">-d</span>
+                    </div>
+                    <div class="output">✓ Container mysql_master Started<br />✓ Container mysql_replica Started<br />✓ Container app_posts Started</div>
+                </div>
+                <div class="eq">O terminal é como um <strong>chat com o sistema operacional</strong>. Você digita uma instrução, o sistema executa e responde.</div>
+                <div class="grid2" style="margin-top: 10px">
+                    <div class="card">
+                        <div class="pill p-blue" style="margin-bottom: 8px">você digita</div>
+                        <div class="desc">docker compose up -d</div>
+                    </div>
+                    <div class="card">
+                        <div class="pill p-green" style="margin-bottom: 8px">sistema responde</div>
+                        <div class="desc">Container Started ✓</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel" id="p1">
+                <div class="card">
+                    <div class="label">estrutura</div>
+                    <div class="title">Todo comando tem partes com responsabilidades diferentes</div>
+                </div>
+                <div class="term">
+                    <div class="term-bar">
+                        <div class="dot d1"></div>
+                        <div class="dot d2"></div>
+                        <div class="dot d3"></div>
+                    </div>
+                    <div>
+                        <span class="cmd">docker</span> <span class="arg">compose</span> <span class="flag">-f</span> <span class="file">docker-compose.yml</span> <span class="arg">up</span>
+                        <span class="flag">--build</span> <span class="flag">-d</span>
+                    </div>
+                </div>
+                <div class="row" style="margin-top: 4px">
+                    <div class="pill p-blue" style="min-width: 70px">docker</div>
+                    <div class="desc">o programa sendo executado — como abrir um aplicativo</div>
+                </div>
+                <div class="row">
+                    <div class="pill p-purple" style="min-width: 70px">compose</div>
+                    <div class="desc">o subcomando — diz qual parte do docker você quer usar</div>
+                </div>
+                <div class="row">
+                    <div class="pill p-coral" style="min-width: 70px">-f arquivo</div>
+                    <div class="desc">flag com valor — especifica qual arquivo usar</div>
+                </div>
+                <div class="row">
+                    <div class="pill p-amber" style="min-width: 70px">up</div>
+                    <div class="desc">a ação — o que você quer fazer (subir containers)</div>
+                </div>
+                <div class="row">
+                    <div class="pill p-green" style="min-width: 70px">--build -d</div>
+                    <div class="desc">modificadores — rebuild da imagem e modo background</div>
+                </div>
+                <div class="eq" style="margin-top: 12px">
+                    <strong>flags com --</strong> são palavras completas &nbsp;·&nbsp; <strong>flags com -</strong> são atalhos de uma letra<br /><span style="color: var(--color-text-tertiary)"
+                        >--build = reconstruir &nbsp;|&nbsp; -d = detached (background)</span
+                    >
+                </div>
+            </div>
+
+            <div class="panel" id="p2">
+                <div class="card">
+                    <div class="label">conceito</div>
+                    <div class="title">A extensão do arquivo define quem vai interpretar e executar o código</div>
+                </div>
+                <div style="margin-top: 4px">
+                    <div class="card">
+                        <div class="row">
+                            <div class="pill p-blue">.js</div>
+                            <div>
+                                <div class="desc" style="font-weight: 500; color: var(--color-text-primary)">JavaScript</div>
+                                <div class="desc">interpretado pelo Node.js — lógica do servidor, rotas, models</div>
+                            </div>
+                        </div>
+                        <div class="term" style="margin-top: 8px"><span class="cmd">node</span> <span class="file">server.js</span> &nbsp;<span class="comment">← Node.js lê e executa</span></div>
+                    </div>
+                    <div class="card">
+                        <div class="row">
+                            <div class="pill p-green">.sql</div>
+                            <div>
+                                <div class="desc" style="font-weight: 500; color: var(--color-text-primary)">SQL</div>
+                                <div class="desc">interpretado pelo MySQL — criação de tabelas, queries, índices</div>
+                            </div>
+                        </div>
+                        <div class="term" style="margin-top: 8px">
+                            <span class="cmd">mysql</span> <span class="flag">-u</span> root <span class="flag">-p</span> <span class="file">001_criar_tabelas.sql</span>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="row">
+                            <div class="pill p-amber">.yml</div>
+                            <div>
+                                <div class="desc" style="font-weight: 500; color: var(--color-text-primary)">YAML</div>
+                                <div class="desc">interpretado pelo Docker Compose — define serviços, volumes, redes</div>
+                            </div>
+                        </div>
+                        <div class="term" style="margin-top: 8px">
+                            <span class="cmd">docker</span> <span class="arg">compose</span> <span class="flag">-f</span> <span class="file">docker-compose.yml</span> <span class="arg">up</span>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="row">
+                            <div class="pill p-coral">.bash</div>
+                            <div>
+                                <div class="desc" style="font-weight: 500; color: var(--color-text-primary)">Shell script</div>
+                                <div class="desc">interpretado pelo terminal — automatiza sequências de comandos</div>
+                            </div>
+                        </div>
+                        <div class="term" style="margin-top: 8px">
+                            <span class="cmd">bash</span> <span class="file">deploy.bash</span> &nbsp;<span class="comment">← terminal lê e executa linha por linha</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel" id="p3">
+                <div class="card">
+                    <div class="label">comparação</div>
+                    <div class="title">Terminal é rascunho — arquivo é código de produção</div>
+                </div>
+                <div class="grid2" style="margin-top: 10px">
+                    <div>
+                        <div class="label" style="margin-bottom: 6px">terminal — uma vez</div>
+                        <div class="term">
+                            <div class="term-bar">
+                                <div class="dot d1"></div>
+                                <div class="dot d2"></div>
+                                <div class="dot d3"></div>
+                            </div>
+                            <div>
+                                <span class="prompt">&gt; </span><span class="cmd">GRANT</span> SELECT ON<br /><span class="prompt"> </span>posts_app_db.*<br /><span class="prompt"> </span>TO
+                                'posts_user'@'%';
+                            </div>
+                            <div class="output" style="color: #ef4444">executa → some → esquece</div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="label" style="margin-bottom: 6px">arquivo — para sempre</div>
+                        <div class="term">
+                            <div class="term-bar">
+                                <div class="dot d1"></div>
+                                <div class="dot d2"></div>
+                                <div class="dot d3"></div>
+                            </div>
+                            <div><span class="file">002_privilegios.sql</span></div>
+                            <div style="margin-top: 6px"><span class="cmd">GRANT</span> SELECT ON<br />posts_app_db.*<br />TO 'posts_user'@'%';</div>
+                            <div class="output" style="color: #28c840">salvo → versionado → reproduzível</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="arrow">↓</div>
+                <div class="eq"><strong>Fluxo profissional:</strong> testa no terminal → valida o resultado → salva no arquivo → commita no git</div>
+                <div class="card" style="margin-top: 10px">
+                    <div class="label">o ENTER em cada contexto</div>
+                    <div class="row" style="margin-top: 8px">
+                        <div class="pill p-blue">terminal</div>
+                        <div class="desc">você aperta ENTER — executa imediatamente</div>
+                    </div>
+                    <div class="row">
+                        <div class="pill p-green">migrate.js</div>
+                        <div class="desc">Node.js aperta ENTER — envia cada linha pro MySQL</div>
+                    </div>
+                    <div class="row">
+                        <div class="pill p-amber">docker compose</div>
+                        <div class="desc">Docker aperta ENTER — monta cada serviço</div>
+                    </div>
+                    <div class="row">
+                        <div class="pill p-purple">nodemon</div>
+                        <div class="desc">nodemon aperta ENTER — reinicia o servidor</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel" id="p4">
+                <div class="card">
+                    <div class="label">quiz — teste o que aprendeu</div>
+                    <div id="qwrap"></div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            const perguntas = [
+                {
+                    q: "O que define quem vai executar um arquivo?",
+                    opts: ["O tamanho do arquivo", "A extensão do arquivo (.js, .sql, .yml)", "O nome do arquivo", "A pasta onde está salvo"],
+                    c: 1,
+                    fb: "A extensão como .js, .sql e .yml diz ao sistema qual programa deve interpretar aquele arquivo.",
+                },
+                {
+                    q: "Qual a diferença entre --build e -d no comando docker compose up?",
+                    opts: ["São a mesma coisa", "--build reconstrói a imagem, -d roda em background", "--build para os containers, -d os inicia", "Não fazem nada — são opcionais"],
+                    c: 1,
+                    fb: "--build reconstrói a imagem do zero. -d significa detached — o container roda em background sem travar o terminal.",
+                },
+                {
+                    q: "Por que o migrate.js usa usuário root e não posts_user?",
+                    opts: ["Porque posts_user não existe", "Porque root é mais rápido", "Porque CREATE TABLE e GRANT exigem privilégio administrativo", "Por convenção de código"],
+                    c: 2,
+                    fb: "CREATE TABLE, GRANT e REVOKE são operações administrativas. posts_user só tem SELECT, INSERT, UPDATE, DELETE — não conseguiria criar tabelas.",
+                },
+                {
+                    q: "O que acontece com um comando digitado no terminal sem um arquivo salvo?",
+                    opts: ["Fica salvo no histórico do banco", "Executa uma vez e some — não é reproduzível", "É commitado automaticamente no git", "Vira uma migration automaticamente"],
+                    c: 1,
+                    fb: "Comandos no terminal executam e somem. Para ser reproduzível em qualquer máquina, precisa estar salvo num arquivo versionado no git.",
+                },
+                {
+                    q: "O que o -f faz no comando docker compose -f docker-compose.yml?",
+                    opts: ["Força a reconstrução da imagem", "Especifica qual arquivo de configuração usar", "Filtra os logs do container", "Finaliza os containers"],
+                    c: 1,
+                    fb: "-f é flag de 'file' — especifica o arquivo que o Docker Compose deve ler. Sem -f ele lê docker-compose.yml por padrão.",
+                },
+            ];
+            let qi = 0,
+                acertos = 0;
+            function renderQ() {
+                const d = document.getElementById("qwrap");
+                if (qi >= perguntas.length) {
+                    d.innerHTML = `<div class="title" style="margin-bottom:8px">Resultado: ${acertos} de ${perguntas.length}</div><div class="desc" style="margin-bottom:12px">${acertos === perguntas.length ? "Perfeito — todos os conceitos consolidados." : acertos >= 3 ? "Bom resultado — revise os que errou." : "Continue estudando — releia as abas anteriores."}</div><button class="quiz-opt" onclick="qi=0;acertos=0;renderQ()" style="max-width:200px">Refazer quiz</button>`;
+                    return;
+                }
+                const p = perguntas[qi];
+                d.innerHTML = `<div class="desc" style="margin-bottom:4px;font-size:12px;color:var(--color-text-tertiary)">pergunta ${qi + 1} de ${perguntas.length}</div><div class="title" style="margin-bottom:12px">${p.q}</div>${p.opts.map((o, i) => `<button class="quiz-opt" onclick="resp(${i})">${o}</button>`).join("")}<div class="feedback" id="fb"></div>`;
+            }
+            function resp(i) {
+                const p = perguntas[qi];
+                const btns = document.querySelectorAll(".quiz-opt");
+                btns.forEach((b) => (b.onclick = null));
+                btns[p.c].classList.add("certa");
+                if (i !== p.c) btns[i].classList.add("errada");
+                else acertos++;
+                const fb = document.getElementById("fb");
+                fb.className = "feedback " + (i === p.c ? "fb-ok" : "fb-err");
+                fb.style.display = "block";
+                fb.textContent = p.fb;
+                setTimeout(() => {
+                    qi++;
+                    renderQ();
+                }, 2200);
+            }
+            function go(n) {
+                document.querySelectorAll(".tab").forEach((t, i) => t.classList.toggle("on", i === n));
+                document.querySelectorAll(".panel").forEach((p, i) => p.classList.toggle("on", i === n));
+                if (n === 4) renderQ();
+            }
+        </script>
+    </body>
+</html>
